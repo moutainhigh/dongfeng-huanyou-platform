@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+<dynamic-hibernate-statement>
+    <!--查询权限目录-->
+    <sql-query name="queryMenu">
+        <![CDATA[
+         SELECT
+       DISTINCT ACT.A_CODE id,
+       ACT.A_PARENT_CODE pid,
+       ACT.A_NAME name,
+       ACT.A_ICON icon,
+       ACT.A_URL url,
+       ACT.A_DISPLAY_ORDER displayOrder
+       FROM HY_ACTION ACT
+       <#if userType?? && userType != 1>
+            LEFT JOIN HY_RA_MAPPING RM ON RM.A_CODE = ACT.A_CODE
+            LEFT JOIN hy_account_role_mapping ARM ON ARM.R_CODE = RM.R_CODE
+            LEFT JOIN HY_ACCOUNT A ON A.ACCOUNT_ID = ARM.ACCOUNT_ID
+            WHERE 1=1 AND A.ACCOUNT_ID = ${userId}
+         </#if>
+		]]>
+    </sql-query>
+    <!--根据目录code查询指定目录-->
+    <sql-query name="queryMenuByCodes">
+        <![CDATA[
+         SELECT
+       ACT.A_CODE id,
+       ACT.A_PARENT_CODE pid,
+       ACT.A_NAME name,
+       ACT.A_ICON icon,
+       ACT.A_URL url,
+       ACT.A_DISPLAY_ORDER displayOrder
+       FROM HY_ACTION ACT
+       WHERE ACT.A_CODE IN (${codes})
+		]]>
+    </sql-query>
+</dynamic-hibernate-statement>

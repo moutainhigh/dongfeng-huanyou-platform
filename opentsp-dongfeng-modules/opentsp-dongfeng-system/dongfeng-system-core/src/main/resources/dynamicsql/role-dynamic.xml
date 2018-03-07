@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+<dynamic-hibernate-statement>
+    <!--yaocy 查询角色列表-->
+    <sql-query name="queryRoleList">
+        <![CDATA[
+        SELECT
+            t1.R_ID AS id,
+            t1.R_NAME AS name,
+            t1.R_CODE AS code,
+            t1.role_type AS roleType,
+            t2.ACCOUNT_NAME AS createAccount,
+            t1.create_time AS createTime,
+            t1.update_time AS updateTime
+        FROM hy_role t1
+        LEFT JOIN hy_account AS t2 ON t1.create_account = t2.ACCOUNT_ID
+        where
+        	1=1
+        <#if accountId?? && accountType?? && accountType!=1>
+            and
+        </#if>
+        <#if accounts?? && accountType != 1>
+            (
+        </#if>
+        <#if accountId?? && accountType?? && accountType!=1>
+            t1.create_account = ${accountId}
+        </#if>
+        <#if accounts?? && accountType != 1>
+            or t2.ACCOUNT_ID in (${accounts}))
+        </#if>
+        <#if name?? && name != "">
+            AND t1.R_NAME like '%${name}%' escape '!'
+        </#if>
+        <#if type?? && type != "">
+            AND t1.role_type = ${type}
+        </#if>
+        ORDER BY t1.R_ID DESC
+        ]]>
+    </sql-query>
+    
+    <sql-query name="queryRolePermissionIds">
+        <![CDATA[
+            select getParentListByAccountIdAndRoleType(${accountId},${roleType}) as ids
+        ]]>
+    </sql-query>
+
+    <sql-query name="queryRolePermission">
+        <![CDATA[
+        SELECT
+            t.A_CODE AS id,
+            t.A_NAME AS name,
+            t.A_PARENT_CODE AS pid
+        FROM hy_action t
+        <#if accountId?? && accountId !=1 && accountType?? && accountType == 2 && roleType?? && (roleType == "3" || roleType == "4" || roleType == "5" || roleType == "6")>
+             WHERE FIND_IN_SET(t.A_CODE,'${ids}')  > 0
+        </#if>
+        <#if accountType?? && accountType != 2 && roleType?? && (roleType == "3" || roleType == "4" || roleType == "5" || roleType == "6")>
+        	  LEFT JOIN hy_roletype_action_mapping hram
+        	  ON hram.action_id = t.a_code
+        	  WHERE hram.role_type = ${roleType} OR FIND_IN_SET(t.A_CODE,getParentListByType(${roleType})) > 0
+        </#if>
+        <#if accountType?? && accountType == 2 && roleType?? && roleType == "2">
+             WHERE FIND_IN_SET(t.A_CODE,getParentListByAccountId(${accountId}))  > 0
+        </#if>
+        group by t.A_CODE
+        HAVING id NOT IN(4004,1021,1031,1032,1033,1034,1035,4010)
+        ]]>
+    </sql-query>
+
+    <sql-query name="insertRoleActionMapping">
+        <![CDATA[
+            INSERT INTO hy_ra_mapping (R_CODE,A_CODE) VALUES (${rCode}, ${aCode})
+        ]]>
+    </sql-query>
+
+    <sql-query name="queryRoleListByName">
+        <![CDATA[
+           select
+        	t1.R_ID as id,
+        	t1.R_NAME as name
+        from
+        	hy_role t1
+        	where 1=1
+        	<#if name??>
+        		and t1.R_NAME = '${name}'
+        	</#if> 
+        ]]>
+    </sql-query>
+
+    <sql-query name="delRoleActionMapping">
+        <![CDATA[
+            DELETE FROM hy_ra_mapping WHERE R_CODE = ${rCode}
+        ]]>
+    </sql-query>
+
+    <sql-query name="getRoleAction">
+        <![CDATA[
+            SELECT
+                ha.A_CODE AS id,
+                ha.A_NAME AS name,
+                ha.A_PARENT_CODE AS pid
+            FROM hy_action ha, hy_ra_mapping hrm
+            WHERE ha.A_CODE = hrm.A_CODE 
+            <#if rCode??>
+                AND hrm.R_CODE=${rCode}
+            </#if>
+        ]]>
+    </sql-query>
+
+    <sql-query name="queryRoleByAccountId">
+        <![CDATA[
+          select
+            	t1.R_NAME as name,
+            	t1.R_CODE as code,
+            	hd.DATA_VALUE as roleType
+            from
+                hy_role t1 left join hy_account as t2 on
+                t1.create_account = t2.ACCOUNT_ID left join hy_basicdata hd on
+                t1.role_type = hd.DATA_CODE
+                and hd.DATA_TYPE = 71
+            where
+            	1 = 1
+             <#if accountId?? && accountType?? && accountType!=1>
+                 and
+             </#if>
+             <#if accounts?? && accountType != 1>
+                (
+             </#if>
+             <#if accountId?? && accountType?? && accountType!=1>
+            	  t1.create_account = ${accountId}
+             </#if>
+             <#if accounts?? && accountType != 1>
+            	or t2.ACCOUNT_ID in(${accounts}))
+             </#if>
+             <#if roleType?? && roleType != "">
+            	and t1.role_type = ${roleType}
+             </#if>
+             order by t1.create_time desc
+     ]]>
+    </sql-query>
+    
+    
+    <sql-query name="queryAccountIDByRCode">
+        <![CDATA[
+            SELECT ACCOUNT_ID FROM hy_account_role_mapping WHERE R_CODE = ${rCode}
+        ]]>
+    </sql-query>
+
+    <sql-query name="queryAccountInfoByRCode">
+        <![CDATA[
+            select
+                ACCOUNT_ID
+            from
+                hy_account_role_mapping
+            where
+                ACCOUNT_ID = (
+                select
+                    ACCOUNT_ID
+                from
+                    hy_account_role_mapping
+                where
+                    R_CODE = ${rCode}
+            )
+        ]]>
+    </sql-query>
+    
+</dynamic-hibernate-statement>

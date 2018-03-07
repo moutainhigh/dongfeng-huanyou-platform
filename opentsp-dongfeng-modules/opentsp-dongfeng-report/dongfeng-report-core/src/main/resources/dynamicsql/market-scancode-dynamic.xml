@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+
+<dynamic-hibernate-statement>
+    <!-- 查询车辆扫码信息-->
+    <sql-query name="queryVehicleScanCodeInfos">
+        <![CDATA[
+            select
+                DISTINCT record.CHASSIS_NUM as chassisNum,
+                record.CAR_CPH as plateNum,
+                record.T_CODE as terminalId,
+                record.T_SIM as sim,
+                TEAM.T_NAME as dealer,
+                basic.data_value as scanOpera,
+                record.operate_user as operator,
+                record.create_time as operaDate,
+                '' as location,
+                '空入车辆批量导入' as remark,
+                record.SYNC_STATE as syncState
+            from hy_scancode_emptyin_info record
+            left join hy_basicdata basic on basic.data_code = record.curr_process and basic.data_type = 94
+            left join hy_team TEAM on TEAM.T_ID = record.CAR_TEAM_ID and TEAM.DEL_FLAG = 0
+            where 1 = 1
+            <#if chassisNum?? && chassisNum != "">
+                AND record.CHASSIS_NUM like '%${chassisNum}%' escape '!'
+            </#if>
+            <#if scanOperaNum?? && scanOperaNum != "" && scanOperaNum != '-1'>
+                AND record.curr_process = '${scanOperaNum}'
+            </#if>
+            <#if startTime?? && startTime != "" && endTime?? && endTime != "">
+                AND record.create_time >= '${startTime}' and record.create_time < '${endTime}'
+            </#if>
+            <#if (scanOperaNum?? && scanOperaNum != '00041' && scanOperaNum != '00042')>
+                union all
+                select
+                    DISTINCT car.CHASSIS_NUM as chassisNum,
+                    car.CAR_CPH as plateNum,
+                    terminal.T_CODE as terminalId,
+                    terminal.T_SIM as sim,
+                    TEAM.T_NAME as dealer,
+                    basic.data_value as scanOpera,
+                    record.operate_user as operator,
+                    record.create_time as operaDate,
+                    record.operate_pos as location,
+                    record.operate_msg as remark,
+                    2 syncState
+                from product_operate_record record
+                inner join hy_car car on record.vin_code = car.STRUCTURE_NUM And car.del_flag = 0
+                <#if accountId?? && accountType != 1 && accountType == 2 && jobType == 1>
+                    inner join hy_atc_mapping atc ON ACCOUNT_ID = ${accountId} AND ATC_TYPE = 0 AND  atc.CAR_TEAM_ID = car.CAR_TEAM_ID
+                </#if>
+                left join hy_terminal terminal on terminal.T_ID = IF(car.CAR_TERMINAL IS NOT NULL AND car.CAR_TERMINAL > 0,car.CAR_TERMINAL,car.CAR_TERMINAL_ID)
+                left join hy_team TEAM on TEAM.T_ID = car.CAR_TEAM_ID and TEAM.DEL_FLAG = 0
+                left join hy_basicdata basic on basic.data_code = record.curr_process and basic.data_type = 94
+                where 1 = 1
+                <#if chassisNum?? && chassisNum != "">
+                    AND car.CHASSIS_NUM like '%${chassisNum}%' escape '!'
+                </#if>
+                <#if scanOperaNum?? && scanOperaNum != "" && scanOperaNum != '-1'>
+                    AND record.curr_process = '${scanOperaNum}'
+                </#if>
+                <#if dealer?? && dealer != "">
+                    AND TEAM.T_NAME = '${dealer}'
+                </#if>
+                <#if startTime?? && startTime != "" && endTime?? && endTime != "">
+                    AND record.create_time >= '${startTime}' and record.create_time < '${endTime}'
+                </#if>
+            </#if>
+            order by chassisNum desc
+		]]>
+    </sql-query>
+
+    <!-- 查询扫码在库车辆信息-->
+    <sql-query name="queryScanVehicles">
+        <![CDATA[
+            select
+                car.CAR_ID as carId,
+                car.CHASSIS_NUM as chassisNum,
+                car.CAR_CPH as plateNum,
+                terminal.T_CODE as code,
+                terminal.T_SIM as sim,
+                car.CAR_TEAM_ID as carTeamId
+            from hy_car car
+            left join hy_terminal terminal ON terminal.T_ID = IF(car.CAR_TERMINAL IS NOT NULL AND car.CAR_TERMINAL > 0,car.CAR_TERMINAL,car.CAR_TERMINAL_ID)
+            where car.del_flag = 0
+            <#if classisNums?? && classisNums?size gt 0 >
+               and car.CHASSIS_NUM in
+               (
+               <#list classisNums as id>
+                    <#if classisNums?size == id_index +1>
+                        '${id}'
+                    <#else>
+                        '${id}',
+                    </#if>
+               </#list>
+               )
+            </#if>
+		]]>
+    </sql-query>
+
+    <!-- 查询扫码已经导入在库车辆信息-->
+    <sql-query name="queryScanEmptyInVehicles">
+        <![CDATA[
+            select
+                car.CHASSIS_NUM as chassisNum
+            from hy_scancode_emptyin_info car where 1 = 1
+            <#if classisNums?? && classisNums?size gt 0 >
+               and car.CHASSIS_NUM in
+               (
+               <#list classisNums as id>
+                    <#if classisNums?size == id_index +1>
+                        '${id}'
+                    <#else>
+                        '${id}',
+                    </#if>
+               </#list>
+               )
+            </#if>
+		]]>
+    </sql-query>
+
+    <!-- 查询空入扫码枚举信息-->
+    <sql-query name="queryScanCompareCodes">
+        <![CDATA[
+            SELECT
+                MAX(result.companyCode) companyCode,
+                MAX(result.productionFactoryCode) productionFactoryCode,
+                MAX(result.shiftCode) shiftCode,
+                MAX(result.sellRepositCode) sellRepositCode,
+                MAX(result.physicalLibraryCode) physicalLibraryCode,
+                MAX(result.warehouseCode) warehouseCode,
+                MAX(result.qualityCheckerCode) qualityCheckerCode,
+                MAX(result.reverseDriverCode) reverseDriverCode
+            FROM (
+                SELECT
+                    CASE WHEN dict.CODE_VALUE = 'A030' THEN GROUP_CONCAT(dict.VALUE) END companyCode,
+                    CASE WHEN dict.CODE_VALUE = 'A031' THEN GROUP_CONCAT(dict.VALUE) END productionFactoryCode,
+                    CASE WHEN dict.CODE_VALUE = 'A032' THEN GROUP_CONCAT(dict.VALUE) END shiftCode,
+                    CASE WHEN dict.CODE_VALUE = 'A033' THEN GROUP_CONCAT(dict.VALUE) END sellRepositCode,
+                    CASE WHEN dict.CODE_VALUE = 'A034' THEN GROUP_CONCAT(dict.VALUE) END physicalLibraryCode,
+                    CASE WHEN dict.CODE_VALUE = 'A035' THEN GROUP_CONCAT(dict.VALUE) END warehouseCode,
+                    CASE WHEN dict.CODE_VALUE = 'B001' THEN GROUP_CONCAT(DISTINCT dict.VALUE) END qualityCheckerCode,
+                    CASE WHEN dict.CODE_VALUE = 'B002' THEN GROUP_CONCAT(DISTINCT dict.VALUE) END reverseDriverCode
+                FROM (
+                      SELECT CASE WHEN CODE = 'B003' THEN 'B001'
+                                  WHEN CODE = 'B004' THEN 'B002'
+                                  ELSE CODE
+                             END CODE_VALUE, VALUE
+                      FROM code_dict) dict
+                GROUP BY dict.CODE_VALUE
+            ) result
+		]]>
+    </sql-query>
+
+    <sql-query name="querySyncScanCodeInfos">
+        <![CDATA[
+            select
+                info.VIN as vin,
+                info.COMPANY as company,
+                info.FACTORY as factory,
+                info.TEAM as team,
+                info.PROPERTYWH as propertywh,
+                info.PHYSICALWH as physicalwh,
+                info.AREA as area,
+                info.SCRUTATOR as scrutator,
+                info.RELATEMAN as relateman,
+                info.OPERATOR as operator
+            from HY_SCANCODE_INFO info where 1 = 1
+            <#if chassisNum?? && chassisNum != "">
+                AND substring(info.VIN,length(info.VIN) - 7,8) = '${chassisNum}'
+            </#if>
+		]]>
+    </sql-query>
+</dynamic-hibernate-statement>

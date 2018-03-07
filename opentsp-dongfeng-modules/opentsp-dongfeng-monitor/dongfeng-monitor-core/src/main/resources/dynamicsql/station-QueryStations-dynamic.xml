@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+
+<dynamic-hibernate-statement>
+    <!-- 查询用户权限下服务站-->
+    <sql-query name="queryStations">
+        <![CDATA[
+            SELECT
+                hss.id,
+                hss.station_name stationName,
+                hss.longitude*0.000001 lng,
+                hss.latitude*0.000001 lat,
+                hss.radius,
+                hss.service_radius serviceRadius
+            FROM
+                hy_service_station hss
+            LEFT JOIN base_area ba ON hss.povince = ba.id
+            <#if accountType gt 1>
+                INNER JOIN hy_account_station has ON hss.id = has.STATION_ID
+            </#if>
+            WHERE
+                hss.DEL_FLAG != 1
+                AND hss.STATION_ENABLE = 1
+            <#if accountType gt 1>
+                AND has.ACCOUNT_ID = ${accountId}
+            </#if>
+            <#if searchType?? && searchType = 1>
+                AND hss.station_name LIKE '%${searchText}%' escape '!'
+            </#if>
+		]]>
+    </sql-query>
+</dynamic-hibernate-statement>

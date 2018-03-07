@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+		<!ELEMENT dynamic-hibernate-statement (
+				(hql-query|sql-query)*
+				)>
+		<!-- default: none -->
+
+		<!-- The query element declares a named Hibernate query string -->
+
+		<!ELEMENT hql-query (#PCDATA)>
+		<!ATTLIST hql-query name CDATA #REQUIRED>
+
+		<!-- The sql-query element declares a named SQL query string -->
+
+		<!ELEMENT sql-query (#PCDATA)>
+		<!ATTLIST sql-query name CDATA #REQUIRED>
+		]>
+
+<dynamic-hibernate-statement>
+	<sql-query name="queryDealerPage">
+		<![CDATA[
+			select
+				ht.t_id id ,
+				ht.T_NAME tname ,
+				ht.dealer_code dealerCode ,
+				hti.T_NAME pname,
+				ht.manage_brand manageBrand ,
+				ht.COMPANY_LINKMAN companyLinkman,
+				ht.COMPANY_ADDRESS companyAddress,
+				ht.COMPANY_LINKTEL companyLinktel,
+				ht.enable_radius enableRadius,
+				ht.lock_radius lockRadius,
+				FROM_UNIXTIME(ht.T_DATE,'%Y-%m-%d %H:%i:%S') tDate,
+				ht.T_ACCOUNT_NAME tAccountName,
+				ht.SYNC_STATUS syncStatus,
+				ht.SYNC_SIGN_STATUS syncSignStatus
+			from hy_team ht
+			inner join hy_team hti on ht.parent_id = hti.t_id
+			<#if accountType gt 1>
+				inner join hy_atc_mapping atc ON atc.ACCOUNT_ID = ${accountId} AND atc.ATC_TYPE = 0 AND atc.CAR_TEAM_ID = ht.T_ID
+			</#if>
+			where ht.del_flag = 0 and ht.T_TYPE = 1
+			<#if tname?? && tname != "">
+				AND ht.T_NAME LIKE '%${tname}%' escape '!'
+			</#if>
+			<#if dealerCode?? && dealerCode != "">
+				AND ht.DEALER_CODE LIKE '%${dealerCode}%' escape '!'
+			</#if>
+			<#if pId?? && pId !="">
+				AND ht.PARENT_ID = ${pId}
+			</#if>
+			order by ht.t_id desc
+		]]>
+	</sql-query>
+	<sql-query name="getDealer">
+		<![CDATA[
+			select
+				ht.t_id id ,
+				ht.T_NAME tname ,
+				ht.dealer_code dealerCode ,
+				ht.T_TYPE tType,
+				hti.T_NAME pname,
+				ht.parent_id parentId,
+				ht.manage_brand manageBrand ,
+				ht.COMPANY_LINKMAN companyLinkman,
+				ht.COMPANY_ADDRESS companyAddress,
+				ht.COMPANY_LINKTEL companyLinktel,
+				ht.enable_radius enableRadius,
+				ht.lock_radius lockRadius,
+				ht.team_lat teamLat,
+				ht.team_lon teamLon,
+				ht.team_picture teamPicture,
+                ht.secd_name_latlon hySecdTeamList,
+                ht.COMPANY_CODE companyCode,
+                ht.COMPANY_FAX companyFax,
+                ht.province govCodePrvc,
+                ht.city govCodeCity
+				from hy_team ht
+				inner join hy_team hti on ht.parent_id = hti.t_id
+				where 1=1
+				and ht.del_flag = 0
+				and ht.T_TYPE = 1
+				and ht.t_id = ${tid}
+		]]>
+	</sql-query>
+	<sql-query name="deleteDealer">
+		<![CDATA[
+    		update hy_team set DEL_FLAG = 1 where t_id = ${tId}
+    	]]>
+	</sql-query>
+	<sql-query name="queryAuditDealer">
+		<![CDATA[
+			select rt.* from
+			(
+			(
+			 select
+			 ha.account_name accountName,hat.create_time createTime,ht.t_id dealerId,ht.t_name dealerName,
+			 ht.DEALER_CODE code,'' as name,ht.lock_radius radius,ht.team_lat oldLat,ht.team_lon oldLng,ht.company_address oldAddress,
+			 hat.lat_itude newLat,hat.long_itude newLng,hat.address newAddress,ht.company_fax fax,ht.company_linktel phone,hat.aera_type type,hat.id auditId,ht.t_id dealerAuthId
+			 from hy_audit_team hat
+			 left join hy_team ht on hat.aera_id = ht.t_id
+			 left join hy_account ha on hat.account_id = ha.account_id
+			 where 1=1 and hat.aera_type = 1 and ht.del_flag = 0 and ht.T_TYPE = 1 and hat.AUDIT_STATUS=0
+			 <#if tid??>
+				and hat.aera_id = ${tid}
+			 </#if>
+			 )
+			union all
+			(
+			 select ha.account_name accountName,hat.create_time createTime,hst.id dealerId,ht.t_name dealerName,
+			 hst.code code,hst.name name,hst.work_radius radius,hst.latitude oldLat,hst.longitude oldLng,hst.address oldAddress,
+			 hat.lat_itude newLat,hat.long_itude newLng,hat.address newAddress,ht.company_fax fax,ht.company_linktel phone,hat.aera_type type,hat.id auditId,hst.dealer_id dealerAuthId
+			 from hy_audit_team hat
+			 left join hy_secdteam hst on hat.aera_id = hst.id
+			 left join hy_team ht on hst.dealer_id = ht.t_id
+			 left join hy_account ha on hat.account_id = ha.account_id
+			 where 1=1 and hat.aera_type = 2 and ht.del_flag = 0 and hat.AUDIT_STATUS=0
+			 <#if tid??>
+				and ht.t_id= ${tid}
+			 </#if>
+			)
+			) rt
+			<#if accountType gt 1>
+				inner join hy_atc_mapping atc ON atc.ACCOUNT_ID = ${accountId} AND atc.ATC_TYPE = 0 AND atc.CAR_TEAM_ID = rt.dealerAuthId
+			</#if>
+			where 1=1
+			<#if dealerName?? && dealerName !="">
+				AND (rt.dealerName LIKE '%${dealerName}%' escape '!' or rt.name LIKE '%${dealerName}%' escape '!')
+			</#if>
+			<#if code?? && code !="">
+				AND rt.code LIKE '%${code}%' escape '!'
+			</#if>
+			order by rt.createTime desc
+		]]>
+	</sql-query>
+	<sql-query name="updateOneDealer">
+		<![CDATA[
+    		update hy_team set team_lat = ${teamLat},team_lon = ${teamLon},company_address = '${companyAddress}',province = ${province}, city = ${city} where t_id = ${tId}
+    	]]>
+	</sql-query>
+	<sql-query name="updateTwoDealer">
+		<![CDATA[
+    		 update hy_secdteam set latitude = ${latitude},longitude = ${longitude},address = '${address}' where id = ${id}
+    	]]>
+	</sql-query>
+	<sql-query name="queryToSynSecTeam">
+		<![CDATA[
+    		select ht.dealer_code jf0300,CONCAT(hst.work_type,'') jf0301,
+			hst.code jf0302,CONCAT(hat.long_itude,'') jf0303,CONCAT(hat.lat_itude,'') jf0304,'1' jf0305,hst.work_radius jf0306,hst.name jf0307,CONCAT(hst.SYNC_STATUS,'') editMode
+			from hy_audit_team hat
+			left join hy_secdteam hst on hat.aera_id = hst.id
+			left join hy_team ht on hst.dealer_id = ht.t_id
+			where 1=1 and hat.aera_type = 2 and ht.del_flag = 0
+			and hat.id in(${auditIds})
+    	]]>
+	</sql-query>
+	<sql-query name="querySecTeam">
+		<![CDATA[
+    		select hst.id id,hst.work_type workType,
+			hst.code code,hst.longitude longitude,hst.latitude latitude,
+			hst.work_radius workRadius,hst.sync_status syncStatus,hst.name name
+			from hy_team ht
+			inner join hy_secdteam hst on ht.t_id = hst.dealer_id
+			where 1=1
+			<#if tid?? && tid !="">
+				and ht.t_id= ${tid}
+			</#if>
+			<#if secIds?? && secIds !="">
+				and hst.id in(${secIds})
+			</#if>
+    	]]>
+	</sql-query>
+	<sql-query name="updateOneDealerSynSignStatus">
+		<![CDATA[
+    		update hy_team set SYNC_SIGN_STATUS = ${syncSignStatus} where t_id = ${id}
+    	]]>
+	</sql-query>
+	<sql-query name="updateTwoDealerSynSignStatus">
+		<![CDATA[
+    		 update hy_secdteam set SYNC_STATUS = ${syncStatus} where id = ${id}
+    	]]>
+	</sql-query>
+	<sql-query name="queryToSynTeam">
+		<![CDATA[
+    		select
+      		ht.dealer_code jf0200,'X009003' jf0201,
+			'1' jf0202,ht.T_NAME jf0203,ht.T_NAME jf0204,hat.ADDRESS jf0205,ht.COMPANY_LINKMAN jf0206,ht.COMPANY_LINKTEL jf0207,CONCAT(ht.SYNC_SIGN_STATUS,'') editMode
+			from hy_audit_team hat
+			left join hy_team ht on hat.aera_id = ht.t_id
+			where 1=1 and hat.aera_type = 1 and ht.del_flag = 0
+			and hat.id in (${auditIds})
+    	]]>
+	</sql-query>
+
+	<sql-query name="querySecTeamId">
+		<![CDATA[
+    		select hst.id,hst.SYNC_STATUS syncStatus,ht.t_id dealerId
+			from hy_audit_team hat
+			left join hy_secdteam hst on hat.aera_id = hst.id
+			left join hy_team ht on hst.dealer_id = ht.t_id
+			where 1=1 and hat.aera_type = 2 and ht.del_flag = 0
+			and hat.id in(${auditIds})
+    	]]>
+	</sql-query>
+	<sql-query name="queryTeamId">
+		<![CDATA[
+    		select
+      		ht.t_id id,ht.SYNC_SIGN_STATUS syncSignStatus
+			from hy_audit_team hat
+			left join hy_team ht on hat.aera_id = ht.t_id
+			where 1=1 and hat.aera_type = 1 and ht.del_flag = 0
+			and hat.id in (${auditIds})
+    	]]>
+	</sql-query>
+	<sql-query name="updateSyncTossStatusOfDealer">
+		<![CDATA[
+    		UPDATE hy_team
+    		SET SYNC_STATUS = ${syncStatus},
+    		UPDATE_TIME =  UNIX_TIMESTAMP(NOW())
+    		WHERE DEL_FLAG != 1 AND t_id = ${id}
+    	]]>
+	</sql-query>
+</dynamic-hibernate-statement>

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+<dynamic-hibernate-statement>
+       <!--liht 查询KF控制器列表-->
+    <sql-query name="queryFKControllerList">
+        <![CDATA[
+
+            SELECT
+					temp.id , temp.sim , temp.type_name
+				FROM
+				(
+								select
+				    			ht.T_ID id , ht.T_SIM sim , htt.type_name type_name,ht.T_CODE code,htt.TYPE_NAME typeName
+				    		from
+				    			hy_terminal ht , hy_terminal_type htt
+
+				    		where
+				    			1=1
+				    			and
+				    			ht.t_team_id = ${dealerId}
+				    			and
+				    			ht.t_style = 0
+				    			and
+				    			ht.T_TYPE_ID = htt.type_id
+				) temp
+				where temp.id not in (
+				    				select
+				    				hc.car_terminal as id
+				    				from
+				    					hy_car hc
+				    				where
+				    					hc.car_team_id = ${dealerId}
+										AND
+											hc.car_terminal is not null
+									)
+				<#if tSim?? && tSim!= "">
+					AND (temp.sim LIKE '%${tSim}%' escape '!'  OR temp.code LIKE '%${tSim}%' escape '!'  OR temp.typeName LIKE '%${tSim}%' escape '!' )
+    			</#if>
+    	]]>
+
+    </sql-query>
+</dynamic-hibernate-statement>

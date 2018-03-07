@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+
+<dynamic-hibernate-statement>
+
+    <!-- 查询盘库报表 -->
+    <sql-query name="queryDisklibraryByParam">
+        <![CDATA[
+            select jf.jf0502 vin,jf.jf0513 invaFlag,jf.jf0500 gunCode,jf.jf0506 dealerCode,hyt.t_name dealerName,jf.jf0501 scanTime,jf.jf0511 scanStatus,jf.jf0519 netCode,jf.jf0518 remark,
+            hyc.car_model_code productCode,ba.name province,hys.name netName,hys.longitude netLng,hys.latitude netLat,hys.address netAddress,por.operate_pos carAddress
+            from jf05 jf
+            LEFT JOIN hy_car hyc on jf.JF0502 = hyc.STRUCTURE_NUM
+            LEFT JOIN hy_team hyt on jf.JF0506 = hyt.DEALER_CODE
+            LEFT JOIN (select name,longitude,latitude,address,dealer_code,code from hy_secdteam group by code,dealer_code) hys on jf.JF0506 = hys.dealer_code and jf.JF0519 = hys.code
+            LEFT JOIN (SELECT id,name FROM base_area GROUP BY id) ba on hyt.province = ba.id
+            LEFT JOIN (SELECT operate_pos,vin_code from product_operate_record where curr_process = '0006') por on hyc.STRUCTURE_NUM = por.vin_code
+            where 1=1 and jf.JF0510 = '2' and hyc.DEL_FLAG =0 and hyt.DEL_FLAG = 0 and hyt.T_TYPE = 1
+            <#if beDate?? && enDate??>
+				AND unix_timestamp(jf.jf0501) between ${beDate} and ${enDate}
+			</#if>
+            <#if dealerCode?? && dealerCode !="">
+				AND jf.jf0506 = '${dealerCode}'
+			</#if>
+			<#if dealerName?? && dealerName !="">
+				AND hyt.t_name = '${dealerName}'
+			</#if>
+			<#if invaFlag?? && invaFlag !="">
+				AND jf.jf0513 = '${invaFlag}'
+			</#if>
+			order by jf.jf0501 desc
+        ]]>
+    </sql-query>
+    <!-- 经销商全量数据弹窗-->
+    <sql-query name="queryAllDealer">
+        <![CDATA[
+			select
+			ht.T_ID id,
+			ht.T_NAME tname,
+			ht.DEALER_CODE dealerCode,
+			ht.manage_brand manageBrand,
+			ht2.T_NAME pname
+			from hy_team ht
+            left join hy_team ht2 on ht.PARENT_ID = ht2.T_ID
+			where ht.del_flag = 0 AND ht.T_TYPE = 1
+            <#if tname?? && tname != "" >
+				AND (ht.T_NAME LIKE '%${tname}%' escape '!' or ht.DEALER_CODE like '%${tname}%' escape '!')
+			</#if>
+			order by ht.t_id desc
+		]]>
+    </sql-query>
+</dynamic-hibernate-statement>

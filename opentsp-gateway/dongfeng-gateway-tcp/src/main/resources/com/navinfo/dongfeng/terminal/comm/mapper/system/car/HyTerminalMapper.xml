@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.navinfo.dongfeng.terminal.comm.mapper.system.car.HyTerminalMapper" >
+
+  <resultMap id="CacheResultMap" type="com.navinfo.dongfeng.terminal.comm.model.system.vehicle.HyTerminal" >
+    <id column="T_ID" property="tId" jdbcType="INTEGER" />
+    <result column="DISTRICT" property="district" jdbcType="INTEGER" />
+    <result column="T_SIM" property="tSim" jdbcType="VARCHAR" />
+    <result column="T_COMMUNICATION_ID" property="tCommunicationId" jdbcType="BIGINT" />
+    <result column="T_TEAM_ID" property="tTeamId" jdbcType="INTEGER" />
+    <result column="T_CODE" property="tCode" jdbcType="VARCHAR" />
+    <result column="T_TYPE_ID" property="tTypeId" jdbcType="INTEGER" />
+    <result column="T_SIM_SIGN" property="tSimSign" jdbcType="INTEGER" />
+    <result column="DEL_FLAG" property="delFlag" jdbcType="INTEGER" />
+     <result column="ALARM_HANDLE" property="alarmHandle" jdbcType="INTEGER" />
+	 <result column="T_AUTO_COMMUNICATION_ID" property="tAutoCommunicationId" jdbcType="BIGINT" />
+	 <result column="AUTO_FLAG" property="autoFlag" jdbcType="INTEGER" />
+	 <result column="IMPORT_TIME" property="importTime" jdbcType="BIGINT" />
+	 <result column="T_STYLE" property="tStyle" jdbcType="INTEGER" />
+	 <result column="T_MODEL" property="tModel" jdbcType="VARCHAR" />
+	 <result column="T_COMMON" property="tCommon" jdbcType="VARCHAR" />
+	 <result column="CAR_ID" property="carId" jdbcType="INTEGER" />
+	 <result column="T_TEAM" property="tteam" jdbcType="VARCHAR" />
+	 <result column="CAR_CPH" property="carCph" jdbcType="VARCHAR" />
+	 <result column="CHASSIS_NUM" property="chassisNum" jdbcType="VARCHAR" />
+	 <result column="TER_TYPE_NAME" property="terTypeName" jdbcType="VARCHAR" />
+	 <result column="T_CAMERA_CHANNEL" property="cameraChannel" jdbcType="VARCHAR" />
+	 <result column="T_MIC" property="mic" jdbcType="INTEGER" />
+  </resultMap>
+
+  <select id="selectAllForCache" resultMap="CacheResultMap" >
+    select 
+    ter.T_ID, 
+    ter.DISTRICT, 
+    ter.T_SIM, 
+    ter.T_COMMUNICATION_ID, 
+    ter.T_TEAM_ID, 
+    ter.T_CODE, 
+    ter.T_TYPE_ID, 
+    ter.T_SIM_SIGN, 
+    ter.DEL_FLAG,
+    ter.ALARM_HANDLE,
+    ter.T_AUTO_COMMUNICATION_ID,
+    ter.AUTO_FLAG,
+    ter.IMPORT_TIME,
+    ter.T_STYLE,
+    ter.T_MODEL,
+    ter.T_COMMON,
+    ter.T_CAMERA_CHANNEL,
+    ter.T_MIC,
+      IFNULL(car.CAR_ID,car2.CAR_ID) CAR_ID,
+      IFNULL(car.CAR_CPH,car2.CAR_CPH) CAR_CPH,
+      IFNULL(car.CHASSIS_NUM,car2.CHASSIS_NUM) CHASSIS_NUM,
+	    t.T_NAME T_TEAM,
+	    data1.TYPE_NAME TER_TYPE_NAME
+    from hy_terminal ter
+    left join  hy_team t on ter.T_TEAM_ID = t.t_id 
+    left join hy_terminal_type data1 on data1.TYPE_ID = ter.T_TYPE_ID
+      left join hy_car car on car.CAR_TERMINAL = ter.T_ID
+      left join hy_car car2 on car2.CAR_TERMINAL_id = ter.T_ID
+    where ter.DEL_FLAG = 0
+  </select>
+
+    <select id="selectAll" resultType="String" >
+        select
+        IFNULL( ter.T_AUTO_COMMUNICATION_ID, ter.T_COMMUNICATION_ID ) AS commId
+        from hy_terminal ter
+        where ter.DEL_FLAG = 0
+    </select>
+
+</mapper>

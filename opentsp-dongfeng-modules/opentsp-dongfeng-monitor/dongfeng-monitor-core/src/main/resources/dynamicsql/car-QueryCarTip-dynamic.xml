@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+
+<dynamic-hibernate-statement>
+   <sql-query name="queryCarTip">
+       <![CDATA[
+              SELECT
+                  car.CAR_ID id,
+                  car.CHASSIS_NUM chassisNum,
+                  IFNULL(car.CAR_CPH,'') plateNum,
+                  IFNULL(car.LOCK_STAUTS,0) lockStauts,
+                  IFNULL(business.business_name,'') customer,
+                  b1.DATA_VALUE stdSalesStatus,
+                  b2.DATA_VALUE aakSalesStatus,
+                  detail.ENGINE_TYPE engineType,
+                  team.T_NAME dealer,
+                  car.OIL_CAPACITY oilCapacity,
+                  ter.T_MIC  terminalMic,
+                  IFNULL(ter.T_CAMERA_CHANNEL,'') terminalChannel,
+                  IF (
+                  ter.T_AUTO_COMMUNICATION_ID IS NOT NULL,
+                  ter.T_AUTO_COMMUNICATION_ID,
+                  ter.T_COMMUNICATION_ID
+                  ) AS commId,
+                  detail.fuel fuel
+              FROM hy_car car
+              INNER JOIN hy_terminal ter ON ter.T_ID =
+              IF (
+                CAR_TERMINAL_ID IS NOT NULL
+                AND CAR_TERMINAL_ID > 0,
+                CAR_TERMINAL_ID,
+                CAR_TERMINAL
+               )
+              LEFT JOIN hy_team team ON car.CAR_TEAM_ID = team.T_ID
+              LEFT JOIN hy_car_detail detail ON car.CAR_ID = detail.CAR_ID
+              LEFT JOIN hy_business business ON business.cid = detail.CAR_OWNER
+              LEFT JOIN (select * from hy_basicdata where DATA_TYPE = 39) b1 ON detail.SALES_STATUS = b1.DATA_CODE
+              LEFT JOIN (select * from hy_basicdata where DATA_TYPE = 39) b2 ON detail.MB_SALES_STATUS = b2.DATA_CODE
+              <#if accountType = 4>
+                    INNER JOIN (SELECT BUSINESS_ID FROM hy_account_business WHERE ACCOUNT_ID = ${accountId})  hab ON detail.CAR_OWNER = hab.BUSINESS_ID
+              <#elseif accountType gt 1>
+                    INNER JOIN (SELECT CAR_TEAM_ID FROM hy_atc_mapping  WHERE ACCOUNT_ID = ${accountId} AND ATC_TYPE = 0) atc ON  atc.CAR_TEAM_ID = car.CAR_TEAM_ID
+              </#if>
+
+              WHERE car.DEL_FLAG = 0
+              AND car.CAR_ID = ${id}
+       ]]>
+   </sql-query>
+    <sql-query name="queryCarLoc">
+        <![CDATA[
+          SELECT
+              car.CAR_ID id,
+              car.CHASSIS_NUM chassisNum,
+              IFNULL(car.CAR_CPH,'') plateNum,
+              IF (
+                  ter.T_AUTO_COMMUNICATION_ID IS NOT NULL,
+                  ter.T_AUTO_COMMUNICATION_ID,
+                  ter.T_COMMUNICATION_ID
+                  ) AS commId
+          FROM hy_car car
+          LEFT JOIN hy_car_detail detail ON car.CAR_ID = detail.CAR_ID
+          LEFT JOIN hy_terminal ter ON ter.T_ID =
+              IF (
+                CAR_TERMINAL_ID IS NOT NULL
+                AND CAR_TERMINAL_ID > 0,
+                CAR_TERMINAL_ID,
+                CAR_TERMINAL
+               )
+          <#if accountType = 4>
+                    INNER JOIN (SELECT BUSINESS_ID FROM hy_account_business WHERE ACCOUNT_ID = ${accountId})  hab ON detail.CAR_OWNER = hab.BUSINESS_ID
+          <#elseif accountType gt 1>
+                    INNER JOIN
+                        (SELECT CAR_TEAM_ID FROM hy_atc_mapping  WHERE ACCOUNT_ID = ${accountId} AND ATC_TYPE = 0) atc ON  atc.CAR_TEAM_ID = car.CAR_TEAM_ID
+          </#if>
+          WHERE car.DEL_FLAG = 0
+          AND car.CAR_ID = ${id}
+       ]]>
+    </sql-query>
+    <sql-query name="queryCarInfo">
+        <![CDATA[
+              SELECT
+                  car.CAR_ID id,
+                  car.CHASSIS_NUM chassisNum,
+                  IFNULL(car.CAR_CPH,'') plateNum,
+                  ter.T_CODE fkTer,
+                  ter.T_SIM fkSim,
+                  IF (
+                  ter.T_AUTO_COMMUNICATION_ID IS NOT NULL,
+                  ter.T_AUTO_COMMUNICATION_ID,
+                  ter.T_COMMUNICATION_ID
+                  ) fkCommNum,
+                  detail.BEFORE_MAINTEN_TIME maintainTimeL,
+                  IFNULL(b1.DATA_VALUE,'') carType,
+                  IFNULL(b2.DATA_VALUE,'') engineType,
+                  IFNULL(detail.ENGINE_NUMBER,'') engineNum,
+                  IFNULL(car.STRUCTURE_NUM,'') vin,
+                  IFNULL(car.OIL_CAPACITY,'') oilCapacity,
+                  car.REMOVAL_TIME removalTimeL,
+                  b4.DATA_VALUE  stdSalesStatus,
+                  detail.SALES_DATE stdSalesTimeL,
+                  b3.DATA_VALUE  aakSalesStatus,
+                  detail.MB_SALES_DATE aakSalesTimeL,
+                  IFNULL(detail.CAR_AMOUNT,0.0) carAmount,
+                  IFNULL(detail.LOAN_AMOUNT,0.0) loanAmount,
+                  IFNULL(detail.SURPLUS,0.0) surplus,
+                  IFNULL(business.business_name,'') customer,
+                  IFNULL(detail.MOBILE,'') phone,
+                  team.T_NAME dealer,
+                  IFNULL(p.JGL,'') enginePower,
+		          IFNULL(p.BSX,'') gearbox,
+		          IFNULL(p.HQ,'') rearAxle,
+		          IFNULL(p.ZJ,'') wheelbase,
+		          IFNULL(p.LT,'') tyre,
+		          IFNULL(p.QT,'') other,
+                  IFNULL(p.FDJ,'') driveVender,
+		          IFNULL(d.name,'') driveForm,
+		          detail.fuel fuel,
+		          IFNULL(car.VIN_OLD,'') vinOld,
+		          IFNULL(car.CHASSIS_NUM_OLD,'') chassisNumOld
+              FROM hy_car car
+              LEFT JOIN hy_team team ON car.CAR_TEAM_ID = team.T_ID
+              LEFT JOIN hy_car_detail detail ON car.CAR_ID = detail.CAR_ID
+              LEFT JOIN hy_business business ON business.cid = detail.CAR_OWNER
+              LEFT JOIN hy_terminal ter ON ter.T_ID = IF (
+                CAR_TERMINAL_ID IS NOT NULL
+                AND CAR_TERMINAL_ID > 0,
+                CAR_TERMINAL_ID,
+                CAR_TERMINAL
+               )
+              LEFT JOIN (select * from hy_basicdata where DATA_TYPE = 2) b1 ON car.CAR_TYPE = b1.DATA_ID
+	          LEFT JOIN (select * from hy_basicdata where DATA_TYPE = 40) b2 ON detail.ENGINE_TYPE = b2.DATA_CODE
+	          LEFT JOIN (select * from hy_basicdata where DATA_TYPE = 39) b3 ON detail.MB_SALES_STATUS = b3.DATA_CODE
+	          LEFT JOIN (select * from hy_basicdata where DATA_TYPE = 39) b4 ON detail.SALES_STATUS = b4.DATA_CODE
+              LEFT JOIN hy_car_param p on car.car_model_code=p.CXM
+	          LEFT JOIN t_drive_from d on substring(p.CXM,4,1)=d.code
+	          <#if accountType = 4>
+                    INNER JOIN (SELECT BUSINESS_ID FROM hy_account_business WHERE ACCOUNT_ID = ${accountId})  hab ON detail.CAR_OWNER = hab.BUSINESS_ID
+              <#elseif accountType gt 1>
+                    INNER JOIN
+                        (SELECT CAR_TEAM_ID FROM hy_atc_mapping  WHERE ACCOUNT_ID = ${accountId} AND ATC_TYPE = 0) atc ON  atc.CAR_TEAM_ID = car.CAR_TEAM_ID
+              </#if>
+	          WHERE car.DEL_FLAG = 0
+              AND car.CAR_ID = ${id}
+       ]]>
+    </sql-query>
+    <sql-query name="queryMaintainInfo">
+        <![CDATA[
+            SELECT rr.REPAIR_DATE maintainTime,
+                   ss.STATION_NAME maintainPlace
+              FROM report_repair_remind rr
+              LEFT JOIN hy_service_station ss ON rr .STATION_NAME=ss.id
+              WHERE ss.DEL_FLAG != 1 and rr.chassisNum = '${chassisNum}'
+              ORDER BY repair_date DESC LIMIT 0,1
+        ]]>
+    </sql-query>
+    <sql-query name="queryMaintainInfo2">
+        <![CDATA[
+            SELECT hss.station_name maintainPlace
+              FROM hy_repair hr
+              LEFT JOIN hy_service_station hss ON hss.id = hr.service_station
+              WHERE hss.DEL_FLAG != 1 and hr.car_id = ${id}
+              AND hr.repair_date = ${repairDate}
+              ORDER BY repair_date DESCLIMIT 0,1
+        ]]>
+    </sql-query>
+</dynamic-hibernate-statement>

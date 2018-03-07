@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+<dynamic-hibernate-statement>
+   	
+    <sql-query name="queryAddOrUpdateCarInfo">
+        <![CDATA[
+        select
+        	c.CAR_ID id,
+        	c.STRUCTURE_NUM car_vin,
+        	c.car_model_code car_model,
+        	(case WHEN c.CAR_TERMINAL IS NULL then c.CAR_TERMINAL_ID else c.CAR_TERMINAL END) terminal_id,
+        	c.CHASSIS_NUM chassiss_num,
+        	c.CAR_TEAM_ID car_team_id,
+        	c.order_number order_number,
+        	cd.SALES_STATUS sales_status,
+        	cd.MB_SALES_STATUS mb_sales_status, 
+			FROM_UNIXTIME(cd.MB_SALES_DATE,'%Y-%m-%d %H:%i:%S') mb_sales_date,
+        	c.DEL_FLAG as del_flag,
+        	cd.invoice_number invoice_number,
+        	from_unixtime( cd.SALES_DATE, '%Y-%m-%d %H:%i:%S' ) sales_date,
+        	b.business_code business_code,
+        	(case WHEN t_auto_communication_id IS NULL THEN	t.T_COMMUNICATION_ID else t.t_auto_communication_id	END) auto_terminal,
+        	FROM_UNIXTIME(c.online_time,'%Y-%m-%d %H:%i:%S') create_time,
+        	c.sync_time update_time
+        	FROM
+        	hy_car c
+        	INNER JOIN hy_terminal t ON (c.CAR_TERMINAL_ID = t.T_ID or c.CAR_TERMINAL = t.T_ID)
+        	LEFT JOIN hy_car_detail cd on c.CAR_ID = cd.CAR_ID
+            LEFT JOIN hy_business b on cd.CAR_OWNER = b.cid
+        	WHERE 1=1
+        	<#if day?? && day != 0>
+        		AND c.sync_time > date_sub(now(), INTERVAL ${day} DAY)
+        	</#if>
+	    ]]>
+    </sql-query>
+	
+	<sql-query name="queryCarParamInfo">
+		<![CDATA[
+		select
+			id as id,
+			lcxm as lcxm,
+			cxm as cxm,
+			sjxh as sjxh,
+			gg as gg,
+			cx as cx,
+			jss as jss,
+			fdj as fdj,
+			bsx as bsx,
+			lhq as lhq,
+			bjsj as bjsj,
+			qz as qz,
+			hq as hq,
+			cj as cj,
+			cxiang as cxg,
+			colorCode as colorCode,
+			jgl as jgl,
+			edgl as edgl,
+			color as color,
+			zj as zj,
+			fa as fa,
+			lt as lt,
+			qt as qt
+		from
+			hy_car_param param where 1=1 
+			<#if minute?? && minute != 0>
+        		AND param.UPDATETIME > date_sub(now(), INTERVAL ${minute} MINUTE)
+        	</#if>
+		 ]]>
+	</sql-query>
+	
+	<sql-query name="selectCarSyncInfoByTime">
+		<![CDATA[
+			SELECT
+				c.CAR_ID AS carId,
+				c.del_flag AS delflag,
+				t.T_SIM as sim, 
+				IFNULL(c.sync_time, '') AS syncDate,
+				IF (IFNULL(cd.SALES_DATE, 0) > 0,FROM_UNIXTIME(cd.SALES_DATE,'%Y-%c-%d %H:%i:%s'),'') AS stdSalDate,
+				IF (IFNULL(cd.MB_SALES_DATE, 0) > 0,FROM_UNIXTIME(cd.MB_SALES_DATE,'%Y-%c-%d %H:%i:%s'),'') AS aakSalDate,
+				IFNULL(b.DATA_VALUE, '') AS carTypeValue,
+				IFNULL(business.business_name, '') AS businessName
+			FROM hy_car c
+				 INNER JOIN hy_terminal t ON (c.CAR_TERMINAL_ID = t.T_ID or c.CAR_TERMINAL = t.T_ID)
+				 LEFT JOIN hy_car_detail cd ON c.Car_ID = cd.CAR_ID
+				 LEFT JOIN hy_basicdata b ON c.CAR_TYPE = b.DATA_ID
+				 LEFT JOIN hy_business business ON cd.CAR_OWNER = business.cid
+				 WHERE b.DATA_TYPE = 2
+				<#if searchFlag?? && searchFlag != 0>		
+					AND UNIX_TIMESTAMP(c.sync_time) BETWEEN ${beginTime} AND ${endTime}
+				</#if>
+		 ]]>
+	</sql-query>
+	
+	<sql-query name="updatePlateNum">
+		<![CDATA[
+		 update hy_car set CAR_CPH='${plateNum}' where STRUCTURE_NUM = '${vin}'
+		]]>
+	</sql-query>
+	
+
+    
+</dynamic-hibernate-statement>

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+
+<dynamic-hibernate-statement>
+    <!-- 查询用户服务站权限-->
+    <sql-query name="queryStationIdsByAccountId">
+        <![CDATA[
+            select station_id id from hy_account_station where account_id = #{accountId}
+		]]>
+    </sql-query>
+    <!-- 查询服务站详情-->
+    <sql-query name="queryStationDetail">
+        <![CDATA[
+            select
+            id id,
+            station_name stationName,
+            address adderss,
+            longitude longitude,
+            latitude latitude,
+            radius radius,
+            phone phone,
+            service_manager serviceManager,
+            service_content serviceContent,
+            parts_content partsContent,
+            star_level starLever,
+            picture picture,
+            service_radius serviceRadius
+            from hy_service_station hss
+            where hss.DEL_FLAG != 1 and hss.id = #{id}
+            <#if stationIds?? && stationIds != "" >
+                and hss.id in(${stationIds})
+            </#if>
+		]]>
+    </sql-query>
+    <!-- 查询服务站评论总数-->
+    <sql-query name="queryStationCommentCounts">
+        <![CDATA[
+            SELECT IFNULL(COUNT(HCS.ID), 0) commentCounts
+            FROM HY_COMMENT_STATION HCS
+            WHERE STATION_ID = #{id}
+        ]]>
+    </sql-query>
+    <!-- 查询服务站评论总星级-->
+    <sql-query name="queryStationStarLeverCounts">
+        <![CDATA[
+            SELECT cast(IFNULL(ROUND(AVG(COMMENT_TOTAL_LEVEL), 0), 0) as SIGNED INTEGER) starLeverCounts
+            FROM HY_COMMENT_STATION
+            WHERE STATION_ID = #{id}
+            GROUP BY STATION_ID
+        ]]>
+    </sql-query>
+</dynamic-hibernate-statement>

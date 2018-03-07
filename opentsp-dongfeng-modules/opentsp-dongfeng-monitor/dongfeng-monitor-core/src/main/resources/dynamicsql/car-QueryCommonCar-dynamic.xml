@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+
+<dynamic-hibernate-statement>
+    <!-- 查询车辆信息及终端信息-->
+    <sql-query name="queryCommonCar">
+        <![CDATA[
+        SELECT
+			car.CAR_ID carId,
+			car.CHASSIS_NUM chassisNum,
+            detail.ENGINE_TYPE engineType,
+            car.OIL_CAPACITY oilCapacity,
+            IFNULL ( ter.T_AUTO_COMMUNICATION_ID, ter.T_COMMUNICATION_ID ) AS commId
+            FROM
+                hy_car car
+            INNER JOIN hy_terminal ter ON ter.T_ID =
+            IF (
+                CAR_TERMINAL_ID IS NOT NULL
+                AND CAR_TERMINAL_ID > 0,
+                CAR_TERMINAL_ID,
+                CAR_TERMINAL
+            )
+            INNER JOIN hy_car_detail detail ON car.CAR_ID = detail.CAR_ID
+            <#if accountType = 4>
+                    INNER JOIN (SELECT BUSINESS_ID FROM hy_account_business WHERE ACCOUNT_ID = ${accountId})  hab ON detail.CAR_OWNER = hab.BUSINESS_ID
+            <#elseif accountType gt 1>
+                    INNER JOIN
+                        (SELECT CAR_TEAM_ID FROM hy_atc_mapping  WHERE ACCOUNT_ID = ${accountId} AND ATC_TYPE = 0) atc ON  atc.CAR_TEAM_ID = car.CAR_TEAM_ID
+           </#if>
+            WHERE
+                car.DEL_FLAG = 0
+            AND car.car_id =  #{carId}
+		]]>
+    </sql-query>
+    <sql-query name="queryCommonCar_extend_1">
+        <![CDATA[
+        SELECT * FROM
+              (
+                  SELECT
+                  car.CHASSIS_NUM chassisNum,
+                  car.car_type carType,
+                  detail.ENGINE_TYPE engineType,
+                  b1.data_value carTypeValue,
+                  b2.data_value engineTypeValue,
+                  IFNULL ( ter.T_AUTO_COMMUNICATION_ID, ter.T_COMMUNICATION_ID ) AS commId
+                  FROM
+                      hy_car car
+                  INNER JOIN hy_terminal ter ON ter.T_ID =
+                  IF (
+                      CAR_TERMINAL_ID IS NOT NULL
+                      AND CAR_TERMINAL_ID > 0,
+                      CAR_TERMINAL_ID,
+                      CAR_TERMINAL
+                  )
+                  INNER JOIN hy_car_detail detail ON car.CAR_ID = detail.CAR_ID
+                  LEFT JOIN (select * from hy_basicdata where data_type = 2) b1 on car.car_type = b1.data_id
+                  LEFT JOIN (select * from hy_basicdata where data_type = 40) b2 on detail.ENGINE_TYPE = b2.data_code
+                  WHERE car.DEL_FLAG = 0
+              ) result
+              where result.commId in(${commIds})
+		]]>
+    </sql-query>
+    <!--防拆方案中查询车辆及终端信息-->
+    <sql-query name="queryTerminalCar">
+        <![CDATA[
+        SELECT
+			car.CAR_ID carId,
+			IFNULL(car.CAR_TERMINAL,0) terminalId,
+			IFNULL(car.CAR_TERMINAL_ID,0) car_termianlId,
+			IFNULL(bdter.applianceCarType,0) bdApplianceCarType,
+			IFNULL(fkter.applianceCarType,0) fkApplianceCarType
+            FROM
+                hy_car car
+            LEFT JOIN hy_terminal bdter ON bdter.T_ID =car.CAR_TERMINAL
+            LEFT JOIN hy_terminal fkter ON fkter.T_ID =car.CAR_TERMINAL_ID
+            WHERE
+                car.DEL_FLAG = 0
+            AND car.car_id =  #{carId}
+		]]>
+    </sql-query>
+    <!--锁车方案中查询车辆及终端信息-->
+    <sql-query name="queryTerCarMenu">
+        <![CDATA[
+        SELECT
+			car.CAR_ID carId,
+			IFNULL(car.CAR_TERMINAL,0) terminalId,
+			IFNULL(car.CAR_TERMINAL_ID,0) car_termianlId
+            FROM
+                hy_car car
+            WHERE
+                car.DEL_FLAG = 0
+            AND car.car_id =  #{carId}
+		]]>
+    </sql-query>
+    <!--语音监控查询车辆及终端通信号信息(北斗和FK同时查询)-->
+    <sql-query name="queryCommIdByCarId">
+        <![CDATA[
+        SELECT
+			car.CAR_ID carId,
+			car.car_cph carNum,
+			car.chassis_num chassisNum,
+			hyt.t_name team,
+			hyb.business_name reCustom,
+			IFNULL ( bdter.T_AUTO_COMMUNICATION_ID, bdter.T_COMMUNICATION_ID ) bdCommId,
+			IFNULL ( fkter.T_AUTO_COMMUNICATION_ID, fkter.T_COMMUNICATION_ID ) fkCommId
+            FROM hy_car car
+            LEFT JOIN hy_terminal bdter ON bdter.T_ID =car.CAR_TERMINAL
+            LEFT JOIN hy_terminal fkter ON fkter.T_ID =car.CAR_TERMINAL_ID
+            LEFT JOIN hy_car_detail hcd on car.car_id = hcd.car_id
+            LEFT JOIN hy_team hyt on car.CAR_TEAM_ID = hyt.t_id
+            LEFT JOIN hy_business hyb on hcd.CAR_OWNER = hyb.cid
+            WHERE car.DEL_FLAG = 0
+            AND car.car_id =  #{carId}
+		]]>
+    </sql-query>
+    <!--防控激活查询车辆及终端通信号信息(北斗和FK同时查询)-->
+    <sql-query name="queryTamperByCarId">
+        <![CDATA[
+        SELECT
+			car.CAR_ID carId,
+			IFNULL(car.CAR_TERMINAL,0) terminalId,
+			IFNULL(car.CAR_TERMINAL_ID,0) car_termianlId,
+			detail.ENGINE_TYPE engineType,
+			fkter.T_CODE fkCode,
+			car.car_cph carNum,
+			car.chassis_num chassisNum,
+			hyt.t_name team,
+			hyb.business_name reCustom,
+			IFNULL ( bdter.T_AUTO_COMMUNICATION_ID, bdter.T_COMMUNICATION_ID ) bdCommId,
+			IFNULL ( fkter.T_AUTO_COMMUNICATION_ID, fkter.T_COMMUNICATION_ID ) fkCommId
+            FROM
+                hy_car car
+            LEFT JOIN hy_terminal bdter ON bdter.T_ID =car.CAR_TERMINAL
+            LEFT JOIN hy_terminal fkter ON fkter.T_ID =car.CAR_TERMINAL_ID
+            INNER JOIN hy_car_detail detail ON car.CAR_ID = detail.CAR_ID
+            LEFT JOIN hy_car_detail hcd on car.car_id = hcd.car_id
+            LEFT JOIN hy_team hyt on car.CAR_TEAM_ID = hyt.t_id
+            LEFT JOIN hy_business hyb on hcd.CAR_OWNER = hyb.cid
+            WHERE
+                car.DEL_FLAG = 0
+            AND car.car_id =  #{carId}
+		]]>
+    </sql-query>
+    <!-- 查询用户权限下车辆-->
+    <sql-query name="selectCommByAccountId">
+        <![CDATA[
+            SELECT
+                IFNULL(car.chassis_num,'') chassisNum,
+                detail.ENGINE_TYPE engineType,
+                car.CAR_TYPE carType,
+                IFNULL(b1.data_value,'') carTypeValue,
+                IFNULL(b2.data_value,'') engineTypeValue,
+                IFNULL  ( ter.T_AUTO_COMMUNICATION_ID, ter.T_COMMUNICATION_ID ) AS commId
+            FROM
+                hy_car car
+            INNER JOIN
+                hy_terminal ter
+            ON
+                ter.T_ID = IF ( CAR_TERMINAL_ID IS NOT NULL AND CAR_TERMINAL_ID > 0, CAR_TERMINAL_ID, CAR_TERMINAL )
+            INNER JOIN hy_car_detail detail ON car.CAR_ID = detail.CAR_ID
+            LEFT JOIN (select * from hy_basicdata where data_type = 2) b1 on car.CAR_TYPE = b1.data_id
+            LEFT JOIN (select * from hy_basicdata where data_type = 40) b2 on detail.ENGINE_TYPE = b2.data_code
+                <#if accountType gt 1>
+                    INNER JOIN
+                        (SELECT CAR_TEAM_ID FROM hy_atc_mapping  WHERE ACCOUNT_ID = ${accountId} AND ATC_TYPE = 0) atc ON  atc.CAR_TEAM_ID = car.CAR_TEAM_ID
+                </#if>
+            WHERE
+                car.DEL_FLAG = 0
+            AND
+                car.CAR_TEAM_ID IS NOT NULL
+		]]>
+    </sql-query>
+    <!-- 查询车辆信息及终端信息  add天然气和柴油车区分字段-->
+    <sql-query name="queryCommonCar_extend_2">
+        <![CDATA[
+        SELECT
+			car.CAR_ID carId,
+			car.CHASSIS_NUM chassisNum,
+            detail.ENGINE_TYPE engineType,
+            car.OIL_CAPACITY oilCapacity,
+            IFNULL ( ter.T_AUTO_COMMUNICATION_ID, ter.T_COMMUNICATION_ID ) AS commId,
+            detail.fuel fuel
+            FROM
+                hy_car car
+            INNER JOIN hy_terminal ter ON ter.T_ID =
+            IF (
+                CAR_TERMINAL_ID IS NOT NULL
+                AND CAR_TERMINAL_ID > 0,
+                CAR_TERMINAL_ID,
+                CAR_TERMINAL
+            )
+            INNER JOIN hy_car_detail detail ON car.CAR_ID = detail.CAR_ID
+            <#if accountType = 4>
+                    INNER JOIN (SELECT BUSINESS_ID FROM hy_account_business WHERE ACCOUNT_ID = ${accountId})  hab ON detail.CAR_OWNER = hab.BUSINESS_ID
+            <#elseif accountType gt 1>
+                    INNER JOIN
+                        (SELECT CAR_TEAM_ID FROM hy_atc_mapping  WHERE ACCOUNT_ID = ${accountId} AND ATC_TYPE = 0) atc ON  atc.CAR_TEAM_ID = car.CAR_TEAM_ID
+           </#if>
+            WHERE
+                car.DEL_FLAG = 0
+            AND car.car_id =  #{carId}
+		]]>
+    </sql-query>
+</dynamic-hibernate-statement>

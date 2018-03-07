@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+<dynamic-hibernate-statement>
+    <!--新增操作日志-->
+    <sql-query name="addOperateLog">
+        <![CDATA[
+        INSERT INTO hy_platform_log (
+          LOG_NAME,
+          LOG_VALUE,
+          LOG_TYPE,
+          LOG_CONTENT,
+          LOG_DATE,
+          LOG_ACCOUNT_IP,
+          LOG_ACCOUNT_NAME,
+          LOG_OPEROBJ
+        )
+        VALUES
+          (
+             '${name}',
+            ${value},
+            ${type},
+            '${content}',
+            ${time},
+            ${ip},
+            '${userName}',
+            ${object}
+          )
+		]]>
+    </sql-query>
+</dynamic-hibernate-statement>

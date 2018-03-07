@@ -1,0 +1,2 @@
+ALTER TABLE hy_role ADD create_time DATETIME DEFAULT NULL COMMENT '创建时间';
+ALTER TABLE hy_role ADD update_time DATETIME DEFAULT NULL COMMENT '修改时间';

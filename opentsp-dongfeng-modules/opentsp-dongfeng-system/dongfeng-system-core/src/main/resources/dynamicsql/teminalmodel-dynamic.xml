@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+<dynamic-hibernate-statement>
+
+      <!--zhangyue 终端型号查询基础类型数据-->
+    <sql-query name="queryDataType">
+        <![CDATA[
+		select
+		       b.data_id as dataId,
+		       b.data_code as dataCode,
+		       b.data_value as dataValue,
+		       b.data_type as dataType,
+               m.parent_code as parentCode
+        from
+              hy_basicdata b
+              left join hy_basic_mapping m on b.data_code = m.code
+              AND m.basic_type=5
+              where 1=1
+                   and b.data_type = ${dataType}
+               ORDER BY data_id DESC
+
+		]]>
+    </sql-query>
+
+    <!--zhangyue 终端型号内容查询（分页）-->
+    <sql-query name="queryDataDetail">
+        <![CDATA[
+
+		select
+		      tm_id tmId,
+		      tm_name tmName,
+		      tm_factory_name tmFactoryName,
+		      tm_factory_num tmFactoryNum,
+		      tm_public_num tmPublicNum,
+		      tm_loction_model tmLoctionModel,
+		      tm_commu_model tmCommuModel,
+		      tm_car_matched tmCarMatched,
+		      tm_model_num tmModelNum,
+		      tm_notes tmNotes
+		from
+		      hy_terminal_model
+		      where 1=1
+		      <#if tmName?? &&  tmName!= "">
+                   AND TM_NAME  like '%${tmName}%' escape '!'
+              </#if>
+              <#if tmFactoryName?? &&  tmFactoryName!= "">
+                   AND TM_FACTORY_NAME  like '%${tmFactoryName}%' escape '!'
+              </#if>
+              <#if tmFactoryNum?? &&  tmFactoryNum!= "">
+                   AND TM_FACTORY_NUM  like '%${tmFactoryNum}%' escape '!'
+              </#if>
+			  order by tm_id desc
+		]]>
+    </sql-query>
+
+
+    <!--zhangyue 按ID号查询一条要删除的终端型号是否绑定-->
+    <sql-query name="queryIdBdData">
+        <![CDATA[
+		  select t_code tmName from hy_terminal where t_model = '${terminalId}' and del_flag = 0
+		]]>
+    </sql-query>
+
+
+    <!--zhangyue 按ID号查询插入数据中的名称是否存在-->
+    <sql-query name="QueryRepeatTmname">
+        <![CDATA[
+		select
+			count(*)
+			from hy_terminal_model
+			where 1=1
+			 <#if tmName?? && tmName!= "">
+				and tm_name like '%${tmName}%' escape '!'
+		    </#if>
+		]]>
+    </sql-query>
+
+</dynamic-hibernate-statement>

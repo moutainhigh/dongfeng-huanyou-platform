@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+
+<dynamic-hibernate-statement>
+    <sql-query name="queryOilVehicleOfBindTerminal">
+        <![CDATA[
+        select * from (
+			<#if accountId??>
+				select
+			    	temp_car.CAR_ID as carId ,
+			    	temp_car.CHASSIS_NUM chassisNum ,
+			    	IFNULL(temp_car.CAR_CPH,'') as carNo ,
+			    	IFNULL(FROM_UNIXTIME(temp_car.REGISTER_TIME),'') as registerTimeStr,
+			    	IF(terminal.T_STYLE=1,terminal.T_ID,NULL) AS tId,
+			    	IF(terminal.T_STYLE=1,terminal.T_CODE,'') AS terminalCode,
+			    	IF(terminal.T_STYLE=1,terminal.T_SIM,'') AS terminalSim,
+			    	IF(terminal.T_STYLE=0,terminal.T_ID,NULL) AS controllerId,
+			    	IF(terminal.T_STYLE=0,terminal.T_CODE,'') AS fkCode,
+			    	IF(terminal.T_STYLE=0,terminal.T_SIM,'') AS fkSim,
+					IFNULL(terminal.T_AUTO_COMMUNICATION_ID, terminal.T_COMMUNICATION_ID ) AS communicationId,
+					team.T_ID as dealerId ,
+					IFNULL(team.DEALER_CODE,'') as dealerCode ,
+					IFNULL(team.T_NAME,'') as companyName,
+					business.cid as businessId,
+					IFNULL(business.business_name,'') as businessName,
+					IFNULL(business.business_code,'') as businessCode ,
+					temp_car.SALES_STATUS as saleStatusId ,
+					sale_status.DATA_VALUE as salesStatusValue ,
+					IFNULL(FROM_UNIXTIME(temp_car.SALES_DATE),'') as salesDateStr,
+					temp_car.MB_SALES_STATUS as aakSalesStatus ,
+					IFNULL(FROM_UNIXTIME(temp_car.MB_SALES_DATE),'') as aakSalesDateStr,
+					IF(temp_car.AUTO_FLAG=9101,'平台','MES') as autoFlagStr,
+					IFNULL(FROM_UNIXTIME(temp_car.REMOVAL_TIME),'') as removalTimeStr,
+					IFNULL(FROM_UNIXTIME(temp_car.NETTING_TIME),'') as firstGpsTimeStr,
+					IFNULL((temp_car.NETTING_LOG * 0.000001),"") as firstGpsLng,
+					IFNULL((temp_car.NETTING_LAT * 0.000001),"") as firstGpsLat,
+					IFNULL(temp_car.invoice_number,'') as invoiceNumber,
+					temp_car.CAR_TYPE as carTypeCode ,
+					IFNULL(car_type.DATA_VALUE,'') as carTypeName,
+					temp_car.ENGINE_TYPE as engineTypeCode,
+					IFNULL(engine_type.DATA_VALUE,'') as engineTypeName ,
+					IFNULL(temp_car.ENGINE_NUMBER,'') as engineNumber,
+					temp_car.STRUCTURE_NUM as structureNum ,
+					temp_car.car_color as color ,
+				   IFNULL(FROM_UNIXTIME(temp_car.CAR_DATE),'') AS syncTime
+				from
+				(
+				    SELECT
+				       car.CAR_ID , car.CHASSIS_NUM , car.CAR_CPH , car.REGISTER_TIME , car.CAR_TERMINAL_ID , car.CAR_TEAM_ID,
+				       car_detail.ENGINE_NUMBER , car_detail.SALES_DATE , car.NETTING_TIME , car.NETTING_LOG , car.NETTING_LAT , car_detail.invoice_number,
+				       car.CAR_TERMINAL , car_detail.CAR_OWNER , car.CAR_TYPE , car_detail.ENGINE_TYPE , car_detail.SALES_STATUS , car.AUTO_FLAG , car.REMOVAL_TIME ,
+				       car.STRUCTURE_NUM , car.car_color,car.sync_time,car_detail.MB_SALES_STATUS,car_detail.MB_SALES_DATE, car.CAR_DATE,car.OFFLINE_TIME
+				    FROM  hy_car car
+				    INNER JOIN  hy_car_detail car_detail ON car.CAR_ID = car_detail.CAR_ID
+				    <#if userType = 4>
+				    INNER JOIN  (SELECT BUSINESS_ID FROM hy_account_business WHERE ACCOUNT_ID = ${accountId})  hab ON car_detail.CAR_OWNER = hab.BUSINESS_ID
+				    <#elseif userType gt 1>
+				     INNER JOIN   (SELECT CAR_TEAM_ID FROM hy_atc_mapping  WHERE ACCOUNT_ID = ${accountId} AND ATC_TYPE = 0) atc ON  atc.CAR_TEAM_ID = car.CAR_TEAM_ID
+				    </#if>
+				    WHERE car.DEL_FLAG = 0 and car_detail.fuel = 1
+				) temp_car
+				inner join hy_terminal terminal ON terminal.T_ID = IF ( CAR_TERMINAL_ID IS NOT NULL AND CAR_TERMINAL_ID > 0, CAR_TERMINAL_ID, CAR_TERMINAL )
+				left join hy_business business on temp_car.CAR_OWNER = business.cid
+				left join hy_team team on team.T_ID = temp_car.CAR_TEAM_ID
+				left join (select * from hy_basicdata where DATA_TYPE = 2) car_type on temp_car.CAR_TYPE = car_type.data_id
+				left join (select * from hy_basicdata where DATA_TYPE = 40) engine_type on temp_car.ENGINE_TYPE = engine_type.data_code
+				left join (select * from hy_basicdata where DATA_TYPE = 39) sale_status on temp_car.SALES_STATUS = sale_status.data_code
+                <#if userType = 4>
+                    INNER JOIN (SELECT BUSINESS_ID FROM hy_account_business  WHERE ACCOUNT_ID = ${accountId})  hab ON temp_car.CAR_OWNER = hab.BUSINESS_ID
+                 </#if>
+				where 1=1
+					<#if carId??>
+						and temp_car.CAR_ID = ${carId}
+					<#else>
+						<#if chassis?? && chassis != "">
+						and temp_car.CHASSIS_NUM like '%${chassis}%' escape '!'
+						</#if>
+						<#if cph?? && cph != "">
+						 and temp_car.CAR_CPH like '%${cph}%' escape '!'
+						</#if>
+						<#if carType?? && carType != "" && carType != "-1">
+						 and temp_car.CAR_TYPE=${carType}
+						</#if>
+						<#if engineNumber?? && engineNumber != "">
+						 and temp_car.ENGINE_NUMBER like '%${engineNumber}%' escape '!'
+						</#if>
+						<#if engineType?? && engineType != "" && engineType != "-1">
+						 and temp_car.ENGINE_TYPE = ${engineType}
+						</#if>
+						<#if companyName?? && companyName != "">
+						 and temp_car.T_NAME like '%${companyName}%' escape '!'
+						</#if>
+						<#if businessName?? && businessName != "">
+						 and business.business_name like '%${businessName}%' escape '!'
+						</#if>
+						<#if tcode?? && tcode != "">
+						 and terminal.T_CODE like '%${tcode}%' escape '!'
+						</#if>
+						<#if fkCode?? && fkCode != "">
+						 and terminal.T_CODE like '%${fkCode}%' escape '!'
+						</#if>
+						<#if sim?? && sim != "">
+						 and terminal.T_SIM = ${sim}
+						</#if>
+						<#if beginRegDate?? && beginRegDate != "" && endRegDate?? && endRegDate != "" >
+						and temp_car.REGISTER_TIME BETWEEN UNIX_TIMESTAMP(${beginRegDate}) and UNIX_TIMESTAMP(${endRegDate})
+						</#if>
+						<#if beginNetDate?? && beginNetDate!="" && endNetDate?? && endNetDate != "">
+						and temp_car.NETTING_TIME BETWEEN UNIX_TIMESTAMP(${beginNetDate}) and UNIX_TIMESTAMP(${endNetDate})
+						</#if>
+						<#if bSyncDate?? && bSyncDate!="" && eSyncDate?? && eSyncDate != "">
+			             and temp_car.CAR_DATE BETWEEN  UNIX_TIMESTAMP('${bSyncDate}')  and UNIX_TIMESTAMP('${eSyncDate}')
+			            </#if>
+			            <#if bNettingDate?? && bNettingDate!="" && eNettingDate?? && eNettingDate != "">
+			             and temp_car.NETTING_TIME BETWEEN  UNIX_TIMESTAMP('${bNettingDate}')  and UNIX_TIMESTAMP('${eNettingDate}')
+			            </#if>
+			            <#if bProdOfflineDate?? && bProdOfflineDate!="" && eProdOfflineDate?? && eProdOfflineDate != "">
+			             and temp_car.OFFLINE_TIME BETWEEN  UNIX_TIMESTAMP('${bProdOfflineDate}')  and UNIX_TIMESTAMP('${eProdOfflineDate}')
+			            </#if>
+			            <#if saleStatus?? && saleStatus != "" && saleStatus != "-1">
+						 and temp_car.SALES_STATUS=${saleStatus}
+						</#if>
+					</#if>
+			<#else>
+				select
+			        car.CAR_ID as carId ,
+			        car.CHASSIS_NUM chassisNum ,
+			        IFNULL(car.CAR_CPH,'') as carNo ,
+			        IFNULL(FROM_UNIXTIME(car.REGISTER_TIME),'') as registerTimeStr,
+			       IF(terminal.T_STYLE=1,terminal.T_ID,NULL) AS tId,
+			    	IF(terminal.T_STYLE=1,terminal.T_CODE,'') AS terminalCode,
+			    	IF(terminal.T_STYLE=1,terminal.T_SIM,'') AS terminalSim,
+			    	IF(terminal.T_STYLE=0,terminal.T_ID,NULL) AS controllerId,
+			    	IF(terminal.T_STYLE=0,terminal.T_CODE,'') AS fkCode,
+			    	IF(terminal.T_STYLE=0,terminal.T_SIM,'') AS fkSim,
+			    	IFNULL(terminal.T_AUTO_COMMUNICATION_ID, terminal.T_COMMUNICATION_ID ) AS communicationId,
+					team.T_ID as dealerId ,
+					IFNULL(team.T_NAME,'') as companyName,
+					IFNULL(team.DEALER_CODE,'') as dealerCode ,
+					business.cid as businessId,
+					IFNULL(business.business_name,'') as businessName,
+					IFNULL(business.business_code,'') as businessCode ,
+					car_detail.SALES_STATUS as saleStatusId ,
+					IFNULL(FROM_UNIXTIME(car_detail.SALES_DATE),'') as salesDateStr,
+					sale_status.DATA_VALUE as salesStatusValue ,
+					car_detail.MB_SALES_STATUS as aakSalesStatus ,
+					IFNULL(FROM_UNIXTIME(car_detail.MB_SALES_DATE),'') as aakSalesDateStr,
+					IF(car.AUTO_FLAG=9101,'平台','MES') as autoFlagStr,
+					IFNULL(FROM_UNIXTIME(car.REMOVAL_TIME),'') as removalTimeStr,
+					IFNULL(FROM_UNIXTIME(car.NETTING_TIME),'') as firstGpsTimeStr,
+					IFNULL((car.NETTING_LOG * 0.000001),"") as firstGpsLng,
+					 IFNULL((car.NETTING_LAT * 0.000001),"") as firstGpsLat,
+					IFNULL(car_detail.invoice_number,'') as invoiceNumber,
+					car.CAR_TYPE AS carTypeCode,
+					IFNULL(car_type.DATA_VALUE,'') AS carTypeName,
+					car_detail.ENGINE_TYPE as engineTypeCode,
+					IFNULL(engine_type.DATA_VALUE,'') as engineTypeName ,
+					IFNULL(car_detail.ENGINE_NUMBER,'') as engineNumber,
+					car.STRUCTURE_NUM as structureNum ,
+					car.CAR_COLOR as color,
+					IFNULL(FROM_UNIXTIME(car.CAR_DATE),'') AS syncTime
+				FROM
+					hy_car car left join hy_car_detail car_detail on car.CAR_ID = car_detail.CAR_ID
+					left join hy_team team on car.car_team_id = team.t_id
+					inner join hy_terminal terminal ON terminal.T_ID = IF ( CAR_TERMINAL_ID IS NOT NULL AND CAR_TERMINAL_ID > 0, CAR_TERMINAL_ID, CAR_TERMINAL )
+					left join hy_business business on car_detail.CAR_OWNER = business.cid
+					left join (select * from hy_basicdata where DATA_TYPE = 2) car_type on car.CAR_TYPE = car_type.data_id
+					left join (select * from hy_basicdata where DATA_TYPE = 40) engine_type on car_detail.ENGINE_TYPE = engine_type.data_code
+					left join (select * from hy_basicdata where DATA_TYPE = 39) sale_status on car_detail.SALES_STATUS = sale_status.data_code
+				where car.DEL_FLAG = 0 and car_detail.fuel = 1
+					<#if carId?? >
+						and car.CAR_ID = ${carId}
+					<#else>
+						<#if chassis?? && chassis != "">
+						and car.CHASSIS_NUM like '%${chassis}%' escape '!'
+						</#if>
+						<#if cph?? && cph != "">
+						 and car.CAR_CPH like '%${cph}%' escape '!'
+						</#if>
+						<#if carType??  && carType != "" && carType != "-1">
+						 and car.CAR_TYPE=${carType}
+						</#if>
+						<#if engineNumber?? && engineNumber != "">
+						 and car_detail.ENGINE_NUMBER like '%${engineNumber}%' escape '!'
+						</#if>
+						<#if engineType?? && engineType != "" && engineType != "-1">
+						 and car_detail.ENGINE_TYPE = ${engineType}
+						</#if>
+						<#if companyName?? && companyName != "">
+						 and team.T_NAME like '%${companyName}%' escape '!'
+						</#if>
+						<#if businessName?? && businessName != "">
+						 and business.business_name like '%${businessName}%' escape '!'
+						</#if>
+						<#if tcode?? && tcode != "">
+						 and terminal.T_CODE like '%${tcode}%' escape '!'
+						</#if>
+						<#if fkCode?? && fkCode != "">
+						 and terminal.T_CODE like '%${fkCode}%' escape '!'
+						</#if>
+						<#if sim?? && sim != "">
+						 and terminal.T_SIM = ${sim}
+						</#if>
+						<#if beginRegDate?? && beginRegDate != "" && endRegDate?? && endRegDate != "" >
+						and car.REGISTER_TIME BETWEEN UNIX_TIMESTAMP(${beginRegDate}) and UNIX_TIMESTAMP(${endRegDate})
+						</#if>
+						<#if beginNetDate?? && beginNetDate!="" && endNetDate?? && endNetDate != "">
+						and car.NETTING_TIME BETWEEN UNIX_TIMESTAMP(${beginNetDate}) and UNIX_TIMESTAMP(${endNetDate})
+						</#if>
+						<#if bSyncDate?? && bSyncDate!="" && eSyncDate?? && eSyncDate != "">
+			             and car.CAR_DATE BETWEEN  UNIX_TIMESTAMP('${bSyncDate}')  and UNIX_TIMESTAMP('${eSyncDate}')
+			            </#if>
+			            <#if bNettingDate?? && bNettingDate!="" && eNettingDate?? && eNettingDate != "">
+			             and car.NETTING_TIME BETWEEN  UNIX_TIMESTAMP('${bNettingDate}')  and UNIX_TIMESTAMP('${eNettingDate}')
+			            </#if>
+			            <#if bProdOfflineDate?? && bProdOfflineDate!="" && eProdOfflineDate?? && eProdOfflineDate != "">
+			             and car.OFFLINE_TIME BETWEEN  UNIX_TIMESTAMP('${bProdOfflineDate}')  and UNIX_TIMESTAMP('${eProdOfflineDate}')
+			            </#if>
+			            <#if saleStatus?? && saleStatus != "" && saleStatus != "-1">
+						 and car_detail.SALES_STATUS=${saleStatus}
+						</#if>
+					</#if>
+			</#if>
+			) carWithTerminal where 1=1 and communicationId is not null
+			order by carId desc
+    	]]>
+    </sql-query>
+</dynamic-hibernate-statement>

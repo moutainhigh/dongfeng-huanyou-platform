@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+<dynamic-hibernate-statement>
+
+        <!--查询服务站-->
+        <sql-query name="queryStationByParam">
+                <![CDATA[
+        SELECT
+                CONCAT(hss.id, '') id,
+                hss.service_code stationCode,
+                hss.station_name stationName,
+                hss.name_forshort stationShortName,
+                CONCAT(hss.IS_CORE, '') centralFlag,
+                hss.longitude stationLon,
+                hss.latitude stationLat,
+                hss.picture stationPhoto,
+                hss.star_level stationLevel,
+                hss.fixed_telephone stationTel,
+                hss.phone stationPhone,
+                hss.address stationAddress,
+                CONCAT(hss.povince, '') provinceId,
+                CONCAT(hss.city, '') cityId,
+                CONCAT(hss.SERVICE_Type, '') serviceType,
+                DATE_FORMAT(FROM_UNIXTIME(hss.creat_Date),'%Y-%m-%d %H:%i:%s') createTime,
+                DATE_FORMAT(FROM_UNIXTIME(hss.update_time),'%Y-%m-%d %H:%i:%s') updateTime
+            FROM hy_service_station hss where 1=1
+                <#if beginTime?? && beginTime != 0&&endTime?? && endTime != 0>
+                        and hss.update_time > ${beginTime} and hss.update_time <=${endTime}
+                </#if>
+        ]]>
+        </sql-query>
+	
+</dynamic-hibernate-statement>

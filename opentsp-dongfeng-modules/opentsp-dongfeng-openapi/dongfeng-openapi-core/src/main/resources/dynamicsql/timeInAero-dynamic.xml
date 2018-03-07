@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+<dynamic-hibernate-statement>
+    <!--查询二级服务站信息-->
+    <sql-query name="selectSecondStationIdByParam">
+        <![CDATA[
+			SELECT
+			    hs.id
+	            FROM hy_service_station hss
+				LEFT JOIN hy_secdstation hs ON hss.id = hs.station_id
+			WHERE
+			    hss.DEL_FLAG != 1
+				AND hss.service_code = '${ssCode}'
+				AND hs.code = '${secCode}'
+		]]>
+    </sql-query>
+    <!--查询车辆绑定的终端通讯号-->
+    <sql-query name="selectCommunicationIdOfCar">
+        <![CDATA[
+			SELECT
+            IF (C.CAR_TERMINAL_ID IS NOT NULL AND C.CAR_TERMINAL_ID > 0, IFNULL( T1.T_AUTO_COMMUNICATION_ID, T1.T_COMMUNICATION_ID ), IFNULL ( T.T_AUTO_COMMUNICATION_ID, T.T_COMMUNICATION_ID ) ) AS communicationId
+            FROM hy_car C
+            LEFT JOIN hy_terminal T ON C.CAR_TERMINAL = T.T_ID
+            LEFT JOIN hy_terminal T1 ON C.CAR_TERMINAL_ID = T1.T_ID
+            WHERE C.STRUCTURE_NUM = '${vin}'
+		]]>
+    </sql-query>
+    <!--查询二级服务站ID-->
+    <sql-query name="selectSubStationIds">
+        <![CDATA[
+			SELECT
+			ss.id
+		FROM hy_service_station s
+		LEFT JOIN hy_secdstation ss ON s.id = station_id
+		WHERE s.id = ${aeraId}
+
+		]]>
+    </sql-query>
+</dynamic-hibernate-statement>

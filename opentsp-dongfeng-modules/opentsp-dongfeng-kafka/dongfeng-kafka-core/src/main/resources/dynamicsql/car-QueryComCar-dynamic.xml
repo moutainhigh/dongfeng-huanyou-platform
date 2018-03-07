@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+
+<dynamic-hibernate-statement>
+    <!-- 通过通信号查询车辆信息及终端信息-->
+    <sql-query name="queryCarByCommId">
+        <![CDATA[
+              SELECT
+  			      car.CAR_ID carId,
+  			      car.LOCK_STAUTS lockStatue,
+                  ter.T_ID terminalId,
+                  ter.T_STYLE terminalType,
+                  car.OPERATE_USER operateUser
+              FROM
+                  hy_car car
+              INNER JOIN hy_terminal ter ON ter.T_ID = CAR_TERMINAL or ter.T_ID = CAR_TERMINAL_ID
+              WHERE car.DEL_FLAG = 0 AND ter.DEL_FLAG = 0 AND
+              IFNULL(ter.T_AUTO_COMMUNICATION_ID, ter.T_COMMUNICATION_ID) = #{commId}
+		]]>
+    </sql-query>
+    <!-- 通过通信号查询指令日志信息-->
+    <sql-query name="queryTerminalLog">
+        <![CDATA[
+              SELECT
+  			      LOG_NAME,
+                  LOG_VALUE,
+                  LOG_TYPE,
+                  LOG_SIM,
+                  LOG_CONTENT,
+                  LOG_DATE,
+                  LOG_ACCOUNT_IP,
+                  LOG_ACCOUNT_NAME,
+                  CAR_CPH,
+                  COMPANY_NAME,
+                  CAR_OWNER,
+                  CHASSIS_NUM,
+                  LOG_STATE,
+                  LOG_LOCK_COMMON
+              FROM
+                  hy terminal_log
+              WHERE LOG_NAME = #{logName} and LOG_VALUE =#{logValue} and LOG_SIM =#{commId}
+		]]>
+    </sql-query>
+</dynamic-hibernate-statement>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding">
+    <file url="file://$PROJECT_DIR$" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/opentsp-dongfeng-modules" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-authority" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-authority/dongfeng-authority-command" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-authority/dongfeng-authority-core" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-common" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-common/dongfeng-common-command" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-common/dongfeng-common-core" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-kafka" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-kafka/dongfeng-kafka-core" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-mail" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-mail/dongfeng-mail-command" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-mail/dongfeng-mail-core" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-monitor" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-monitor/dongfeng-monitor-command" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-monitor/dongfeng-monitor-core" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-openapi" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-openapi/dongfeng-openapi-command" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-openapi/dongfeng-openapi-core" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-push" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-report" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-report/dongfeng-report-command" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-report/dongfeng-report-core" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-rpws" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-system" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-system/dongfeng-system-command" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-system/dongfeng-system-core" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/opentsp-gateway" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/opentsp-gateway/dongfeng-gateway-tcp" charset="UTF-8" />
+  </component>
+</project>

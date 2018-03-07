@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+
+<dynamic-hibernate-statement>
+    <!-- 查询报警车辆信息-->
+    <sql-query name="queryOverTimeAlarmVehicles">
+        <![CDATA[
+            select
+                A.CAR_ID as carId,
+                A.CHASSIS_NUM as chassisNum,
+                A.CAR_CPH as plateNumber,
+                A.CAR_TERMINAL as fkControllerID,
+                ter1.T_COMMUNICATION_ID as fkCommunicationId,
+                A.CAR_TERMINAL_ID as beidouMachineID,
+		        ter2.T_COMMUNICATION_ID as beidouCommunicationId,
+                tm.t_name as dealer,
+                buss.business_name as client,
+                buss.link_telpone as contacts,
+                basic1.DATA_VALUE as carModel,
+				basic2.DATA_VALUE as engineType,
+                B.engine_number as engineModel
+            from hy_car A
+			<#if accountId?? && accountType != 1>
+				inner join hy_atc_mapping atc ON atc.ACCOUNT_ID = ${accountId} AND ATC_TYPE = 0 AND atc.CAR_TEAM_ID = A.CAR_TEAM_ID
+            </#if>
+            left join hy_car_detail B on A.CAR_ID = B.CAR_ID
+            left join hy_terminal ter1 ON ter1.del_flag = 0 and A.CAR_TERMINAL = ter1.T_ID
+			left join hy_terminal ter2 ON ter2.del_flag = 0 and A.CAR_TERMINAL_ID = ter2.T_ID
+            left join hy_team tm on tm.t_id = A.CAR_TEAM_ID
+            left join hy_business buss ON buss.cid = B.CAR_OWNER
+            left join hy_basicdata basic1 ON basic1.DATA_TYPE = 2 and A.CAR_TYPE = basic1.DATA_ID
+            left join hy_basicdata basic2 ON basic2.DATA_TYPE = 40 and B.ENGINE_TYPE = basic2.DATA_CODE
+            where A.del_flag = 0
+            <#if chassisNum?? && chassisNum != "">
+                and A.CHASSIS_NUM = '${chassisNum}'
+            </#if>
+            <#if carModel?? && carModel != "">
+                and basic1.DATA_ID = '${carModel}' and basic1.DATA_TYPE = 2
+            </#if>
+            <#if client?? && client != "">
+                and buss.business_name = '${client}'
+            </#if>
+            <#if plateNumber?? && plateNumber != "">
+                and A.CAR_CPH = '${plateNumber}'
+            </#if>
+            <#if fkControllerID??>
+                and A.CAR_TERMINAL = ${fkControllerID}
+            </#if>
+            <#if dealer?? && dealer != "">
+                and tm.t_name = '${dealer}'
+            </#if>
+            <#if engineType?? && engineType != "">
+                and basic2.DATA_ID = '${engineType}' and basic2.DATA_TYPE = 40
+            </#if>
+            <#if beidouMachineID??>
+                and A.CAR_TERMINAL_ID = ${beidouMachineID}
+            </#if>
+            ORDER BY chassisNum desc
+		]]>
+    </sql-query>
+
+    <!-- 查询服务站信息-->
+    <sql-query name="queryServerStations">
+        <![CDATA[
+            select
+                DISTINCT s.id stationId,
+                s.station_name name,
+                s.address address
+            from hy_service_station s
+            <#if accountId?? && accountType != 1>
+				inner JOIN ( select station_id from hy_account_station station where ACCOUNT_ID = ${accountId}) s1 ON s1.station_id = s.id
+			</#if>
+            where 1 = 1   and s.DEL_FLAG != 1
+            <#if stationName?? && stationName != "">
+                and s.station_name LIKE CONCAT(CONCAT('%', '${stationName}'), '%') escape '!'
+            </#if>
+            <#if province??>
+                and s.povince = ${province}
+            </#if>
+            <#if city??>
+                and s.city = ${city}
+            </#if>
+		]]>
+    </sql-query>
+</dynamic-hibernate-statement>

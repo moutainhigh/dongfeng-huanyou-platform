@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+
+<dynamic-hibernate-statement>
+    <!-- 查询服务站评价-->
+    <sql-query name="queryStationComments">
+        <![CDATA[
+            SELECT
+            IFNULL(HCS.ID, 0) id,
+            HCS.COMMENT comment,
+            IFNULL(HCS.COMMENT_TIME, 0) commentTime,
+            HCS.COMMENT_TOTAL_LEVEL level,
+            HYC.CHASSIS_NUM chassium
+            FROM HY_COMMENT_STATION HCS
+            LEFT JOIN HY_CAR HYC ON HCS.CAR_ID=HYC.CAR_ID
+            WHERE STATION_ID = #{stationId} AND HYC.DEL_FLAG = 0
+            ORDER BY COMMENT_TIME DESC
+		]]>
+    </sql-query>
+    <!-- 查询服务站评价星级-->
+    <sql-query name="queryStationLevel">
+        <![CDATA[
+            select COMMENT_TOTAL_LEVEL levelType,count(id) commentCount from HY_COMMENT_STATION where STATION_ID = #{stationId} group by COMMENT_TOTAL_LEVEL
+		]]>
+    </sql-query>
+</dynamic-hibernate-statement>

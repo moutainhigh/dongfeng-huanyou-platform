@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement ((hql-query|sql-query)*)>
+        <!-- default: none -->
+        <!-- The query element declares a named Hibernate query string -->
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+        <!-- The sql-query element declares a named SQL query string -->
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+<dynamic-hibernate-statement>
+    <!-- 销售区域搜索 Sunyu -->
+    <sql-query name="queryDistrictPage">
+        <![CDATA[
+			select
+			ht.T_ID tid,
+			ht.DISTRICT district,
+			ht.T_NAME tname,
+			ht.T_TYPE ttype,
+			ht.T_DATE tdate,
+			ht.T_ACCOUNT_NAME taccountName,
+			ht.PARENT_ID parentId,
+			ht.T_LINKMAN tlinkman,
+			ht.T_LINKTEL tlinktel,
+			ht.T_DESC tdesc,
+			ht.COMPANY_NAME companyName,
+			ht.COMPANY_BUSINESS_SCOPE companyBusinessScope,
+			ht.COMPANY_ADDRESS companyAddress,
+			ht.COMPANY_CODE companyCode,
+			ht.COMPANY_TEL companyTel,
+			ht.COMPANY_FAX companyFax,
+			ht.COMPANY_LINKMAN companyLinkman,
+			ht.COMPANY_LINKTEL companyLinktel,
+			ht.LICENCE_NUMBER licenceNumber,
+			ht.DEL_FLAG delFlag,
+			ht.DEALER_CODE dealerCode,
+			ht.manage_brand manageBrand,
+			ht.team_lat teamLat,
+			ht.team_lon teamLon,
+			ht.enable_radius enableRadius,
+			ht.lock_radius lockRadius,
+			ht.secd_name_latlon secdNameLatLon,
+			ht.team_picture teamPicture,
+			ht2.T_NAME pname
+			from hy_team ht
+			<#if accountType gt 1>
+				INNER JOIN
+					(SELECT CAR_TEAM_ID FROM hy_atc_mapping  WHERE ACCOUNT_ID = ${accountId} AND ATC_TYPE = 0) atc ON  atc.CAR_TEAM_ID = ht.T_ID
+			</#if>
+			left join hy_team ht2 on ht.PARENT_ID = ht2.T_ID
+			where ht.T_TYPE = 0 and ht.DEL_FLAG != 1
+			<#if tname?? && tname != "">
+				AND ht.T_NAME LIKE '%${tname}%' escape '!'
+			</#if>
+			<#if tlinkman?? && tlinkman != "">
+				AND ht.T_LINKMAN LIKE '%${tlinkman}%' escape '!'
+			</#if>
+			<#if parentId?? && parentId != "" >
+				AND ht.PARENT_ID = '${parentId}'
+			</#if>
+			order by ht.t_id desc
+		]]>
+    </sql-query>
+
+    <!--查询组-->
+    <sql-query name="queryParentTeamsById">
+        <![CDATA[
+            SELECT queryParentTeams(${teamId}) as parents
+        ]]>
+    </sql-query>
+
+    <sql-query name="getTeamByType">
+        <![CDATA[
+            SELECT
+                t.T_ID AS id,
+                t.T_NAME AS name,
+                t.PARENT_ID AS pid,
+                IF(t.T_TYPE = 0, 'true', 'false') as isParent,
+                IF(t.T_TYPE = 0, 'true', 'false') as open
+            FROM hy_team t
+            <#if accountId?? && accountType != 1>
+				inner join hy_atc_mapping hya ON hya.ACCOUNT_ID = ${accountId} AND t.t_id = hya.car_team_id
+            </#if>
+            WHERE t.DEL_FLAG != 1
+            <#if type?? && type != "">
+                AND t.T_TYPE = ${type}
+            </#if>
+            <#if pid?? && pid != "">
+                AND t.PARENT_ID = ${pid}
+            </#if>
+            <#if name?? && name != "">
+                AND t.T_NAME LIKE '%${name}%' escape '!'
+            </#if>
+            <#if teamIds?? && teamIds != "#">
+                AND FIND_IN_SET(t.T_ID, '${teamIds}') > 0
+            </#if>
+            <#if teamIds?? && teamIds = "#">
+                AND t.PARENT_ID = 0
+            </#if>
+        ]]>
+    </sql-query>
+
+    <!--管理员用户时查询唯一性-->
+    <sql-query name="QueryRepeatBySys">
+        <![CDATA[
+            SELECT
+				COUNT(*)
+			FROM
+				hy_team ht
+			WHERE
+				ht.T_type = 0 and ht.del_flag = 0
+				<#if tName?? && tName!= "">
+					AND ht.T_NAME = '${tName}'
+		    	</#if>
+				<#if parentId?? && parentId!= "">
+					AND ht.PARENT_ID = ${parentId}
+		    	</#if>
+        ]]>
+    </sql-query>
+    <!--非管理员用户时查询唯一性-->
+    <sql-query name="QueryRepeatByNotSys">
+        <![CDATA[
+            SELECT
+				COUNT(*)
+			FROM
+				hy_team hyt,
+				hy_atc_mapping hya
+			WHERE
+				hyt.t_id = hya.car_team_id
+			AND hya.ATC_TYPE = 0 AND hyt.T_TYPE = 0 and hyt.del_flag = 0
+			<#if userId??>
+				AND hya.ACCOUNT_ID = ${userId}
+		    </#if>
+		    <#if tName?? && tName!= "">
+				AND hyt.T_NAME = '${tName}'
+		    </#if>
+		    <#if parentId?? && parentId!= "">
+				AND hyt.PARENT_ID = ${parentId}
+		    </#if>
+        ]]>
+    </sql-query>
+    <!--查询Hy_atc_mapping信息-->
+    <sql-query name="queryByPIdAndAtcType">
+        <![CDATA[
+            SELECT
+					DISTINCT ACCOUNT_ID accountId
+			FROM
+				hy_atc_mapping ha
+			WHERE
+
+			ha.CAR_TEAM_ID = ${carTeamId}
+
+			AND ha.ATC_TYPE = ${atcType}
+
+        ]]>
+    </sql-query>
+    <sql-query name="getDistrict">
+        <![CDATA[
+		select
+		ht1.T_ID tid,
+		ht1.T_NAME tname,
+		ht1.PARENT_ID parentId,
+		ht1.T_LINKMAN tlinkman,
+		ht1.T_LINKTEL tlinktel,
+		ht2.T_NAME pname
+		from hy_team ht1
+		left join hy_team ht2 on ht1.PARENT_ID = ht2.T_ID
+		where ht1.DEL_FLAG = 0
+		  and ht1.T_ID = ${id}
+		]]>
+    </sql-query>
+</dynamic-hibernate-statement>

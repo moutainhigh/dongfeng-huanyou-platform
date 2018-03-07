@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+
+<dynamic-hibernate-statement>
+
+	<sql-query name="queryRSerpartAppointmentList">
+		<![CDATA[
+		 select 
+				ap.appointment_id as appointmentId,
+				ap.car_id as carId,
+				car_info.chassisNum as chassisNum,
+				car_info.carCph as carCph,
+				car_info.terId as terId,
+				car_info.carTerId as carTerId,
+				car_info.companyName as companyName,
+				car_info.carOwner as carOwner,
+				car_info.carType as carType,
+				car_info.engineNumber as engineNumber,
+				ap.appointment_phone as appoPhone,
+				ap.station_name as appoStation,
+				ap.appointment_name as appoName,
+				FROM_UNIXTIME(ap.appointment_time,'%Y-%m-%d %H:%i:%S') as appoTime,
+				FROM_UNIXTIME(ap.appo_submit_time,'%Y-%m-%d %H:%i:%S') as appoSubmitTime,
+				ap.service_content as appoService,
+				ap.parts_content as appoParts,
+				ap.appointment_comment as appoComment,
+				FROM_UNIXTIME(ap.inbound_time,'%Y-%m-%d %H:%i:%S') as inTime,
+				FROM_UNIXTIME(ap.outbound_time,'%Y-%m-%d %H:%i:%S') as outTime,
+				FROM_UNIXTIME(cs.comment_time,'%Y-%m-%d %H:%i:%S') as commTime,
+				cs.COMMENT_TECHNOLOGY_LEVEL as commTechLevel,
+				cs.COMMENT_SERVICE_LEVEL as commServiceLevel,
+				cs.COMMENT_TOTAL_LEVEL as commTotalLevel,
+				ap.appointment_status as appointmentStatus,
+				ap.station_id as stationId,
+				ap.tool_content as appoTool,
+				ap.appointment_id as appointmentNum,
+				ap.appointment_type as appointmentType
+				from 
+					hy_appointment ap
+				<#if accounttype?? && (accounttype=="2" || accounttype=="3")>
+					inner join ( select station_id from hy_account_station where account_id = ${accountid}) s1 on s1.station_id = ap.station_id 
+				</#if>
+				left outer join hy_comment_station cs on ap.appointment_id = cs.appointment_id and ap.car_id = cs.car_id
+				<#if stationName?? || (accounttype?? && accounttype!=1) >
+				join (
+					select
+						 distinct hr.id as tid
+						from hy_service_station hr
+						<#if accountName?? && accountName != "system" && accountName != "_1" >
+							inner join (SELECT STATION_ID FROM hy_account_station has where has.ACCOUNT_ID = ${accountId} ) c on hr.id=c.STATION_ID
+						</#if>
+					where 1 = 1 and hr.DEL_FLAG != 1
+					<#if stationName?? >
+						and hr.station_name like CONCAT(CONCAT('%','${stationName}'), '%') escape '!'
+					</#if>
+					<#if provinceCode?? && cityCode?? >
+						and hr.povince = ${provinceCode}
+						and hr.city = ${cityCode}
+					</#if>
+					) station on station.tid = ap.station_id
+				</#if>
+				left join (
+				select 
+					   team_car.carId as carId,
+					   team_car.carCph as carCph,
+					   team_car.chassisNum as chassisNum,
+					   bdter.T_CODE as terId,
+				       fkter.T_CODE as carTerId,
+				       basic.DATA_VALUE as carType,
+					   bd.DATA_VALUE as engineNumber,
+					   business.business_name as carOwner,
+					   team_car.tName as companyName,
+					   team_car.CAR_TYPE,
+					   team_car.engineType,
+					   team_car.structureNum
+					   from 
+					   (
+						select
+							car.CAR_ID as carId,
+					        car.CHASSIS_NUM as chassisNum,
+					        car.CAR_CPH as carCph,
+					        car.CAR_MODEL as carModel,
+					   		car.STRUCTURE_NUM as structureNum,
+					   		detail.CAR_OWNER as carOwner,
+					        detail.ENGINE_NUMBER as engineNumber,
+					        detail.ENGINE_TYPE as engineType,
+					        car.CAR_TERMINAL,
+					        car.CAR_TERMINAL_ID,
+					        car.CAR_TYPE,
+					        car.del_flag as delFlag,
+					        team.T_NAME as tName
+					    FROM
+					        hy_car car,hy_car_detail detail,
+							(
+							select
+								ht.T_ID,
+								ht.T_NAME,
+								ht.del_flag
+							from
+								hy_team ht
+							<#if accountId?? && accountType?? && accountType != 1>
+								,hy_atc_mapping atc
+								 where ht.t_id = atc.car_team_id 
+								 	and atc.ACCOUNT_ID = ${accountId}
+									and atc_type = 0
+							</#if>
+							) team
+							where team.del_flag=0
+							and car.CAR_ID = detail.CAR_ID
+							and car.CAR_TEAM_ID = team.T_ID
+					  ) team_car
+				    left join hy_terminal bdter on team_car.CAR_TERMINAL = bdter.T_ID
+				    left join hy_terminal fkter on team_car.CAR_TERMINAL_ID = fkter.T_ID
+				    left join hy_business business on business.cid = team_car.carOwner
+				    left join (select * from hy_basicdata where DATA_TYPE = 40) bd ON team_car.engineType = bd.DATA_CODE
+				    left join (select * from hy_basicdata where DATA_TYPE = 2) basic ON team_car.CAR_TYPE = basic.DATA_ID
+				    where 1=1 and team_car.delFlag=0
+				    <#if isTer?? && isTer == "1">
+				    	and (team_car.CAR_TERMINAL > 0 or team_car.CAR_TERMINAL_ID > 0)
+					</#if>
+				) car_info on ap.car_id = car_info.carId
+				where 1=1 
+					<#if appoType?? && appoType !="-1">
+						and ap.appointment_type = ${appoType}
+					</#if>
+					<#if appointmentNum??>
+						and ap.appointment_id = ${appointmentNum}
+					</#if>
+					<#if bDate?? && eDate?? >
+						and ap.appo_submit_time between ${bDate} and ${eDate}
+					</#if>
+					<#if bsdate?? && esdate??>
+						and ap.appointment_time between ${bsdate} and ${esdate}
+					</#if>
+					<#if chassisNum?? && chassisNum != "">
+					    and car_info.chassisNum like CONCAT(CONCAT('%','${chassisNum}'),'%') escape '!'
+					</#if>
+					<#if carCph?? && carCph != "">
+				    	and car_info.carCph like CONCAT(CONCAT('%','${carCph}'),'%') escape '!'
+					</#if>
+					<#if carOwnerStr??>
+						and car_info.carOwner like CONCAT(CONCAT('%','${carOwnerStr}'),'%' ) escape '!'
+					</#if>
+					<#if companyName??>
+						and car_info.companyName like CONCAT(CONCAT('%','${companyName}'), '%') escape '!'
+					</#if>
+					<#if terid??>
+						and car_info.terId like CONCAT(CONCAT('%','${terid}'), '%') escape '!'
+				    </#if>
+					<#if carTerid??>
+				        and car_info.carTerId like CONCAT(CONCAT('%','${carTerid}'), '%') escape '!'
+				    </#if>
+					<#if engineType?? && engineType != "">
+				    	and car_info.engineType= ${engineNumber}
+					</#if>
+					<#if carType?? && carType != -1>
+				    	and car_info.CAR_TYPE = ${carType}
+					</#if>
+					<#if structureNum??>
+						and car_info.structureNum = ${structureNum}
+					</#if>
+			 		order by ap.appointment_id desc 
+		]]>
+	</sql-query>
+
+	<sql-query name="queryHyBasicMapping">
+		<![CDATA[
+		select
+			b.data_id as dataId,
+			b.data_code as dataCode,
+			b.data_value as dataValue,
+			b.data_type as dataType
+		from
+			hy_basicdata b left join hy_basic_mapping m on
+			b.data_code = m.code
+			and m.basic_type = 5
+		where
+			1 = 1 
+		 <#if dataType??>
+	  	   and b.data_type = ${dataType}
+	  	 </#if>
+	  	 <#if dataCode??>
+	  	   and b.data_code like CONCAT(CONCAT('%','${dataCode}'),'%') escape '!' limit 1
+	  	 </#if>
+		 ]]>
+	</sql-query>
+
+	<sql-query name="queryChangeStatus">
+		<![CDATA[
+			select
+				appointment_id as appointmentId,
+				station_id as stationId,
+				appointment_type as appointmentType,
+				car_id as carId,
+				service_content as serviceContent,
+				parts_content as partsContent,
+				appointment_comment as appointmentComment,
+				appointment_name as appointmentName,
+				appointment_time as appointmentTime,
+				appointment_phone as appointmentPhone,
+				station_name as stationName,
+				appo_submit_time as appoSubmitTime,
+				appointment_num as appointmentNum,
+				appointment_status as appointmentStatus,
+				tool_content as toolContent
+			from
+				hy_appointment
+			where
+				1 = 1
+				and appointment_id = ${appointmentNum}
+		]]>
+	</sql-query>
+
+	<sql-query name="updateChangeStatusMapping">
+		<![CDATA[
+		update hy_appointment
+		set
+		<#if appointmentStatus?? >
+			appointment_status = ${appointmentStatus}
+		</#if>
+		where
+		<#if appointmentNum??>
+			appointment_id = ${appointmentNum} 
+		</#if>
+		]]>
+	</sql-query>
+
+</dynamic-hibernate-statement>

@@ -1,0 +1,1 @@
+alter table hy_car alter column DISTRICT_ID set DEFAULT 0;

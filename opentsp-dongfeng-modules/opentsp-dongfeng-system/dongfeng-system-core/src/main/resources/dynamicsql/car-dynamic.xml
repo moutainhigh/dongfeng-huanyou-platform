@@ -1,0 +1,1206 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+<dynamic-hibernate-statement>
+     <!--yaocy 查询用户列表-->
+    <sql-query name="queryDealerPageInCarManager">
+        <![CDATA[
+		
+			<#if account_id?? >
+				select
+					ht.t_id id ,
+					ht.T_NAME tname ,
+					ht.dealer_code dealerCode ,
+					ht.manage_brand manageBrand ,
+					ht.COMPANY_LINKMAN companyLinkman,
+				    ht.COMPANY_ADDRESS companyAddress,
+				    ht.COMPANY_LINKTEL companyLinktel,
+				    ht.enable_radius enableRadius,
+				    ht.lock_radius lockRadius,
+				    ht2.T_NAME pname
+				from
+					hy_atc_mapping ham , hy_team ht , hy_account ha  , hy_team ht2
+				where
+					ham.CAR_TEAM_ID = ht.T_ID
+				and
+					ha.ACCOUNT_ID = ham.ACCOUNT_ID
+				and
+					ha.account_id = ${account_id}
+			    AND  ht.PARENT_ID = ht2.T_ID
+				and
+					ht.del_flag = 0
+				and
+					ht.T_TYPE = 1
+				<#if govCodeCity??>
+				and ht.province = ${govCodeCity}
+				</#if>
+				<#if name?? && name != "">
+				and ht.T_NAME LIKE CONCAT(CONCAT('%', '${name}'), '%') escape '!'
+				</#if>
+				<#if fruzzy?? && fruzzy != "">
+				and ( 
+					ht.T_NAME LIKE CONCAT(CONCAT('%', '${fruzzy}'), '%') escape '!'
+					OR ht.dealer_code LIKE CONCAT(CONCAT('%', '${fruzzy}'), '%') escape '!'
+					OR ht.manage_brand LIKE CONCAT(CONCAT('%', '${fruzzy}'), '%') escape '!'
+					)
+				</#if>
+				order by ht.T_ID desc
+			<#else>
+				select
+					ht.t_id id ,
+					ht.T_NAME tname ,
+					ht.dealer_code dealerCode ,
+					ht.manage_brand manageBrand ,
+					ht.COMPANY_LINKMAN companyLinkman,
+				    ht.COMPANY_ADDRESS companyAddress,
+				    ht.COMPANY_LINKTEL companyLinktel,
+				    ht.enable_radius enableRadius,
+				    ht.lock_radius lockRadius,
+				    ht2.T_NAME pname
+				from
+					hy_team ht  left join hy_team ht2 on ht.PARENT_ID = ht2.T_ID
+				where
+				1=1
+				and
+					ht.del_flag = 0
+				and
+					ht.T_TYPE = 1
+
+				<#if govCodeCity?? >
+				and ht.province = ${govCodeCity}
+				</#if>
+				<#if name?? && name != "">
+				and ht.T_NAME LIKE CONCAT(CONCAT('%', '${name}'), '%') escape '!'
+				</#if>
+				<#if fruzzy?? && fruzzy != "">
+				and ( 
+					ht.T_NAME LIKE CONCAT(CONCAT('%', '${fruzzy}'), '%') escape '!'
+					OR ht.dealer_code LIKE CONCAT(CONCAT('%', '${fruzzy}'), '%') escape '!'
+					OR ht.manage_brand LIKE CONCAT(CONCAT('%', '${fruzzy}'), '%') escape '!'
+					)
+				</#if>
+				order by ht.T_ID desc
+			</#if>
+
+		]]>
+    </sql-query>
+
+    <sql-query name="queryTerminalPage">
+        <![CDATA[
+				SELECT
+					temp.id , temp.sim , temp.type_name , temp.tCode , temp.type_id , temp.t_style as tstyle , temp.t_team_id as dealerId
+				FROM
+				(
+								select
+				    			ht.T_ID id , ht.T_CODE tCode , ht.T_SIM sim , htt.type_name type_name , htt.TYPE_ID type_id , ht.T_STYLE , ht.t_team_id , ht.DEL_FLAG
+				    		from
+				    			hy_terminal ht , hy_terminal_type htt  
+				
+				    		where
+				    			1=1
+				    			and
+				    			ht.t_team_id = ${dealerId}
+				    			and
+				    			ht.t_style = ${tstyle}
+				    			and
+				    			ht.T_TYPE_ID = htt.type_id
+				) temp
+				where
+				temp.DEL_FLAG = 0
+				and
+				temp.id not in (
+				    				select
+				    				hc.car_terminal as id
+				    				from
+				    					hy_car hc
+				    				where
+				    					hc.car_team_id = #{dealerId}
+										AND
+										hc.car_terminal is not null
+									)
+				<#if fruzzy != "" >
+					and ( 
+						temp.sim LIKE CONCAT(CONCAT('%', '${fruzzy}'), '%') escape '!'
+						OR temp.tCode LIKE CONCAT(CONCAT('%', '${fruzzy}'), '%') escape '!'
+						or temp.type_name like CONCAT(CONCAT('%','${fruzzy}'),'%') escape '!'
+						)
+    			</#if>
+    	]]>
+    </sql-query>
+
+    <sql-query name="queryControllerPage">
+        <![CDATA[
+				SELECT
+					temp.id , temp.sim , temp.type_name , temp.tCode , temp.type_id , temp.t_style as tstyle , temp.t_team_id as dealerId
+				FROM
+				(
+								select
+				    			ht.T_ID id , ht.T_CODE tCode , ht.T_SIM sim , htt.type_name type_name , htt.TYPE_ID type_id , ht.T_STYLE , ht.t_team_id , ht.DEL_FLAG
+				    		from
+				    			hy_terminal ht , hy_terminal_type htt  
+				
+				    		where
+				    			1=1
+				    			and
+				    			ht.t_team_id = ${dealerId}
+				    			and
+				    			ht.t_style = ${tstyle}
+				    			and
+				    			ht.T_TYPE_ID = htt.type_id
+				) temp
+				where
+				temp.DEL_FLAG = 0
+				and
+				temp.id not in (
+				    				select
+				    				hc.car_terminal_id as id
+				    				from
+				    					hy_car hc
+				    				where
+				    					hc.car_team_id = #{dealerId}
+										AND
+										hc.car_terminal_id is not null
+									)
+				<#if fruzzy != "" >
+					and ( 
+						temp.type_name LIKE CONCAT(CONCAT('%', '${fruzzy}'), '%') escape '!'
+						OR temp.tCode LIKE CONCAT(CONCAT('%', '${fruzzy}'), '%') escape '!'
+						or temp.sim like CONCAT(CONCAT('%' , '${fruzzy}') , '%') escape '!'
+						)
+    			</#if>
+    	]]>
+    </sql-query>
+
+    <sql-query name="hasTerminalBindingDealer">
+
+        <![CDATA[
+		select
+			ht.t_id as id
+		from 
+			hy_terminal ht
+		where
+			ht.T_TEAM_ID = ${teamId}
+		and
+			ht.T_ID in (${tid})
+    	]]>
+
+    </sql-query>
+
+    <sql-query name="queryBusinessPage">
+        <![CDATA[
+			select
+				temp_business.businessCode , temp_business.addressCode , temp_business.businessName , temp_business.id , temp_business.addressName , temp_business.addressCommon , temp_business.linkTelpone ,
+				if((ba.name is null or ba.name = ''),temp_business.govName,concat(ba.name , temp_business.govName) ) as govName,
+				temp_business.c_type as ctype , temp_business.vehicleLic_code as drivingLicense
+			from
+			(
+			SELECT
+					hb.business_code businessCode , hb.address_code addressCode , hb.business_name businessName , hb.cid as id , ba.name addressName , hb.address_common addressCommon , hb.link_telpone as linkTelpone , ba.name as govName , ba.parent_id, hb.c_type , hb.vehicleLic_code
+				FROM
+					hy_business hb
+					left join base_area ba
+					on hb.address_code = ba.id
+			) temp_business left join base_area ba on temp_business.parent_id = ba.id
+			where
+				1=1
+			<#if name?? && name != "">
+			and temp_business.businessName like CONCAT(CONCAT('%', '${name}'), '%') escape '!'
+			</#if>
+			<#if fruzzy?? && fruzzy != "">
+				AND
+				(
+				temp_business.businessName like CONCAT(CONCAT('%', '${fruzzy}'), '%') escape '!'
+				or 
+				temp_business.linkTelpone like CONCAT(CONCAT('%', '${fruzzy}'), '%') escape '!'
+				or
+				ba.name like CONCAT(CONCAT('%', '${fruzzy}'), '%') escape '!'
+				OR
+				temp_business.govName like CONCAT(CONCAT('%', '${fruzzy}'), '%') escape '!'
+				)
+			</#if>
+			
+			order by temp_business.id desc
+    	]]>
+    </sql-query>
+
+    <sql-query name="queryBasicData">
+        <![CDATA[
+			select 
+				b.data_id as id,
+				b.data_code as dataCode,
+				b.data_value as dataValue,
+				b.data_type as dataType,
+				m.parent_code as parentCode 
+			from 
+				hy_basicdata b left join hy_basic_mapping m on b.data_code = m.code 
+				AND m.basic_type=5 where b.data_type = ${dataType}
+    	]]>
+    </sql-query>
+
+    <sql-query name="queryCarByChassis">
+        <![CDATA[
+    		select
+    			hc.CAR_ID id , hc.DEL_FLAG as delFlag , hc.CAR_TERMINAL as terminalId , hc.CAR_TERMINAL_ID as fkCode
+    		from
+    			hy_car hc
+    		where
+    			hc.CHASSIS_NUM = '${chassis}'
+    	]]>
+    </sql-query>
+
+    <sql-query name="queryCarOtherChassis">
+        <![CDATA[
+    		select
+    			hc.CAR_ID id
+    		from
+    			hy_car hc
+    		where
+    			hc.CHASSIS_NUM ='${chassis}'
+    		and
+    			hc.car_id !=${id}
+    	]]>
+    </sql-query>
+
+    <sql-query name="carPage">
+        <![CDATA[
+			<#if account_id??>
+				select	
+					temp_car.CAR_ID as carId , 
+					temp_car.CHASSIS_NUM chassisNum , 
+					IFNULL(temp_car.CAR_CPH,'') as cph , 
+					temp_car.REGISTER_TIME as registerTimeStr,
+					IFNULL(terminal.T_CODE,'') as terminalCode , 
+					IFNULL(terminal.T_SIM,'') as terminalSim,
+					IFNULL(controller.T_CODE,'') as fkCode , 
+					IFNULL(controller.T_SIM,'') as fkSim,
+					IF (temp_car.CAR_TERMINAL_ID IS NOT NULL AND temp_car.CAR_TERMINAL_ID > 0, IFNULL( controller.T_AUTO_COMMUNICATION_ID, controller.T_SIM ), IFNULL ( terminal.T_AUTO_COMMUNICATION_ID, controller.T_SIM ) ) as communicationId,
+					IFNULL(temp_car.t_name,'') as companyName,
+					IFNULL(temp_car.DEALER_CODE,'') as dealerCode , 
+					IFNULL(business.business_name,'') as businessName,
+					IFNULL(car_type.DATA_VALUE,'') as car_TYPE_VALUE,
+					IFNULL(engine_type.DATA_VALUE,'') as engine_TYPE_VALUE , 
+					IFNULL(temp_car.ENGINE_NUMBER,'') as engineNumber,
+					sale_status.DATA_VALUE as salesStatusValue , 
+					temp_car.SALES_DATE as salesDateStr,
+					enter_mode.data_value as autoFlagStr,
+					temp_car.REMOVAL_TIME as removalTimeStr,
+					temp_car.NETTING_TIME as firstGpsTimeStr,
+					IFNULL((temp_car.NETTING_LOG * 0.000001),"") as firstGpsLng, 
+					IFNULL((temp_car.NETTING_LAT * 0.000001),"") as firstGpsLat,
+					IFNULL(temp_car.invoice_number,'') as invoiceNumber,
+					IFNULL(business.business_code,'') as businessCode , 
+					temp_car.t_id as dealerId ,
+					terminal.t_id as tId , 
+					controller.t_id as controllerId , 
+					temp_car.CAR_TYPE as carType , 
+					temp_car.SALES_STATUS as saleSatusId , 
+					temp_car.STRUCTURE_NUM as sturctureNum , 
+					temp_car.car_color as color , 
+					business.cid , 
+					temp_car.ENGINE_TYPE as engineType , 
+					temp_car.img_path ,
+					temp_car.OIL_CAPACITY as oilCapacity,
+					temp_car.CAR_AMOUNT as carAmount , 
+					temp_car.LOAN_AMOUNT as loanAmount , temp_car.SURPLUS as surplus ,
+					temp_car.CREATE_STATION_ID as createStationId ,
+					hss.station_name as stationName ,
+					temp_car.INSTAL_TYPE as instalType ,
+					if(temp_car.INSTAL_TYPE = 1,'前装' , '后装') as instalTypeDesc ,
+					temp_car.OFFLINE_TIME as offlineTime,
+					temp_car.MB_SALES_DATE as mbSalesDate ,
+					aak_sale_status.DATA_VALUE as aakStatusValue ,
+					temp_car.MB_SALES_STATUS as mbSalesStatus,
+					temp_car.car_model_code as carModelCode ,
+					temp_car.ENGINE_TYPE_REAR as engineTypeRear ,
+					temp_car.qr_code as qrCode,
+					temp_car.RATED_POWER as edgl,
+					temp_car.MAXIMUM_POWER as zdgl,
+					temp_car.CURB_WEIGHT as zbzl ,
+					temp_car.TOTAL_MASS as zzl ,
+					temp_car.fuel ,
+					if(temp_car.fuel = 0,'天然气车' , '柴油车') as fuelValue ,
+					controller.T_AUTO_COMMUNICATION_ID as fkAutoCommunication,
+					controller.T_COMMUNICATION_ID as fkCommunication,
+					terminal.T_AUTO_COMMUNICATION_ID as autoCommunication,
+					terminal.T_COMMUNICATION_ID as communication , 
+					temp_car.order_number as orderNumber , 
+					temp_car.online_time as onlineTime,
+					temp_car.sync_time as syncTime,
+					temp_car.CAR_DATE as carDate,
+					temp_car.vfactory , 
+					temp_car.VIN_OLD as vinOld,
+					temp_car.CHASSIS_NUM_OLD as chassisOld
+				from
+				(
+				    SELECT
+				       car.CAR_ID , 
+				       car.CHASSIS_NUM , 
+				       car.CAR_CPH , 
+				       car.REGISTER_TIME , 
+				       car.CAR_TERMINAL_ID , 
+				       team.t_name , 
+				       team.DEALER_CODE , 
+				       team.T_ID,
+				       car_detail.ENGINE_NUMBER , 
+				       car_detail.SALES_DATE , 
+				       car.NETTING_TIME , 
+				       car.NETTING_LOG , car.NETTING_LAT , car_detail.invoice_number,
+				       car.CAR_TERMINAL , car_detail.CAR_OWNER , car.CAR_TYPE , car_detail.ENGINE_TYPE , car_detail.SALES_STATUS , car.AUTO_FLAG , car.REMOVAL_TIME ,
+				       car.STRUCTURE_NUM , car.car_color , car_detail.img_path , car.OIL_CAPACITY,
+				       car_detail.CAR_AMOUNT , car_detail.LOAN_AMOUNT , car_detail.SURPLUS as surplus , car.CREATE_STATION_ID , car.INSTAL_TYPE , car.OFFLINE_TIME , car_detail.MB_SALES_STATUS ,
+				       car_detail.MB_SALES_DATE , car.car_model_code , car_detail.ENGINE_TYPE_REAR , car.qr_code , car_detail.RATED_POWER , car_detail.MAXIMUM_POWER,
+				       car_detail.CURB_WEIGHT , car_detail.TOTAL_MASS , car_detail.fuel , car.order_number , car.online_time,
+				       car.sync_time,car.CAR_DATE , car.vfactory , car.VIN_OLD , car.CHASSIS_NUM_OLD
+				       
+				    FROM
+				        hy_car car , hy_car_detail car_detail , (select * from hy_atc_mapping act , hy_team ht where ht.t_type = 1 and ht.del_flag = 0 and ht.t_id = act.CAR_TEAM_ID and act.ACCOUNT_ID = ${account_id}) team
+				    WHERE
+				        car.CAR_ID = car_detail.CAR_ID
+				    AND
+				        car.CAR_TEAM_ID = team.T_ID
+				    and
+				    	car.DEL_FLAG = 0
+				    <#if structureNum??>
+				    	and IF(LOCATE('${structureNum}' , ifnull (car.STRUCTURE_NUM , car.VIN_OLD)) > 0 , 1 , if(LOCATE('${structureNum}' , IFNULL(car.VIN_OLD , car.STRUCTURE_NUM)) > 0 , 1 , 0)) > 0
+				    </#if>
+					<#if chassis?? && chassis != "">
+						and if(LOCATE('${chassis}' , ifnull (car.CHASSIS_NUM , car.CHASSIS_NUM_OLD)) > 0 , 1 , if(LOCATE('${chassis}' , IFNULL(car.CHASSIS_NUM_OLD , car.CHASSIS_NUM))  , 1 , 0)) > 0
+					</#if> 	
+					<#if cph?? && cph != "">
+					 	and car.CAR_CPH like '%${cph}%'  escape '!'
+					</#if>
+					<#if carType?? && carType != "" && carType != '-1'>
+						and car.CAR_TYPE in (${carType})
+					</#if>
+					<#if engineNumber?? && engineNumber != "">
+					 	and car_detail.ENGINE_NUMBER like '%${engineNumber}%'  escape '!'
+					</#if>
+					<#if engineType?? && engineType != "" && engineType != '-1'>
+						and car_detail.ENGINE_TYPE in (${engineType}) 
+					</#if>
+					<#if companyName?? && companyName != "">
+						and team.t_name like '%${companyName}%'  escape '!'
+					</#if>
+					<#if beginRegDate?? && endRegDate??>
+						and car.REGISTER_TIME BETWEEN ${beginRegDate} and ${endRegDate}
+					</#if>
+					<#if instalType??>
+						and car.INSTAL_TYPE = ${instalType}
+					</#if>
+					<#if beginOffline?? && endOffline?? >
+						and car.online_time BETWEEN ${beginOffline} and ${endOffline}
+					</#if>
+					<#if beginAssembleTime?? && endAssembleTime?? >
+						and car.CAR_DATE BETWEEN ${beginAssembleTime} and ${endAssembleTime}
+					</#if>
+					<#if stdStatus??>
+						and car_detail.SALES_STATUS = ${stdStatus}
+					</#if>
+					<#if aakStatus??>
+						and car_detail.MB_SALES_STATUS = ${aakStatus}
+					</#if>
+					<#if vfactory??>
+						and car.vfactory = '${vfactory}'
+					</#if>
+					<#if fuel??>
+						and car_detail.fuel = ${fuel}
+					</#if>
+				) temp_car left join hy_terminal terminal on temp_car.car_terminal = terminal.T_ID
+				left join hy_terminal controller on temp_car.CAR_TERMINAL_ID = controller.T_ID
+				left join hy_business business on temp_car.CAR_OWNER = business.cid
+				left join (select * from hy_basicdata where DATA_TYPE = 2) car_type on temp_car.CAR_TYPE = car_type.data_id
+				left join (select * from hy_basicdata where DATA_TYPE = 40) engine_type on temp_car.ENGINE_TYPE = engine_type.data_code
+				left join (select * from hy_basicdata where DATA_TYPE = 39) sale_status on temp_car.SALES_STATUS = sale_status.data_code
+				left join (select * from hy_basicdata where DATA_TYPE = 39) aak_sale_status on temp_car.MB_SALES_STATUS = aak_sale_status.data_code
+				left join (select * from hy_basicdata where DATA_TYPE = 91) enter_mode on temp_car.AUTO_FLAG = enter_mode.DATA_CODE
+				left join hy_service_station hss on temp_car.CREATE_STATION_ID = hss.id and hss.station_enable = 1 and hss.DEL_FLAG=0
+				where
+					1=1
+					<#if car_id??>
+						and temp_car.CAR_ID = ${car_id}
+					<#else>
+						<#if businessName?? && businessName != "">
+						 and business.business_name like '%${businessName}%'  escape '!'
+						</#if>
+						<#if tcode?? && tcode != "">
+						 and terminal.T_CODE like '%${tcode}%'  escape '!'
+						</#if>
+						<#if fkCode?? && fkCode != "">
+						 and controller.T_CODE like '%${fkCode}%' escape '!'
+						</#if>
+
+						<#if beginNetDate??  && endNetDate??>
+							and temp_car.NETTING_TIME BETWEEN ${beginNetDate} and ${endNetDate}
+						</#if>
+						<#if stationName?? && stationName != "">
+							and hss.station_name like '%${stationName}%' escape '!'
+						</#if>
+					</#if>
+
+				order by temp_car.CAR_ID desc
+			<#else>
+
+				select
+			    	car.CAR_ID as carId , car.CHASSIS_NUM chassisNum , 
+			    	IFNULL(car.CAR_CPH,'') as cph ,
+			    	car.REGISTER_TIME as registerTimeStr,
+					IFNULL(terminal.T_CODE,'') as terminalCode , IFNULL(terminal.T_SIM,'') as terminalSim,
+					IFNULL(controller.T_CODE,'') as fkCode , IFNULL(controller.T_SIM,'') as fkSim,
+					IF (car.CAR_TERMINAL_ID IS NOT NULL AND car.CAR_TERMINAL_ID > 0, IFNULL( controller.T_AUTO_COMMUNICATION_ID, controller.T_SIM ), IFNULL ( terminal.T_AUTO_COMMUNICATION_ID, controller.T_SIM ) ) as communicationId,
+					IFNULL(team.t_name,'') as companyName,IFNULL(team.DEALER_CODE,'') as dealerCode , IFNULL(business.business_name,'') as businessName,
+					IFNULL(car_type.DATA_VALUE,'') as car_TYPE_VALUE,IFNULL(engine_type.DATA_VALUE,'') as engine_TYPE_VALUE , IFNULL(car_detail.ENGINE_NUMBER,'') as engineNumber,
+					sale_status.DATA_VALUE as salesStatusValue , car_detail.SALES_DATE as salesDateStr,
+					enter_mode.data_value as autoFlagStr,car.REMOVAL_TIME as removalTimeStr,
+					car.NETTING_TIME as firstGpsTimeStr,IFNULL((car.NETTING_LOG * 0.000001),"") as firstGpsLng, IFNULL((car.NETTING_LAT * 0.000001),"") as firstGpsLat,
+					IFNULL(car_detail.invoice_number,'') as invoiceNumber,IFNULL(business.business_code,'') as businessCode , team.T_ID as dealerId , terminal.T_ID as tId , controller.T_ID as controllerId , car.CAR_TYPE as carType,
+					car_detail.SALES_STATUS as saleSatusId , car.STRUCTURE_NUM as sturctureNum , car.CAR_COLOR as color , business.cid , car_detail.ENGINE_TYPE as engineType , car_detail.img_path , car.OIL_CAPACITY as oilCapacity,
+					car_detail.CAR_AMOUNT as carAmount , car_detail.LOAN_AMOUNT as loanAmount , car_detail.SURPLUS as surplus , car.CREATE_STATION_ID as createStationId , hss.station_name as stationName ,car.INSTAL_TYPE as instalType , if(car.INSTAL_TYPE = 1,'前装' , '后装') as instalTypeDesc , car.OFFLINE_TIME as offlineTime , 
+					car_detail.MB_SALES_DATE as mbSalesDate , aak_sale_status.DATA_VALUE as aakStatusValue , car_detail.MB_SALES_STATUS as mbSalesStatus , car.car_model_code as carModelCode,
+					car_detail.ENGINE_TYPE_REAR as engineTypeRear , car.qr_code as qrCode , car_detail.RATED_POWER as edgl , car_detail.MAXIMUM_POWER as zdgl,
+					car_detail.CURB_WEIGHT as zbzl,
+					car_detail.TOTAL_MASS as zzl,
+					car_detail.fuel,
+					if(car_detail.fuel = 0,'天然气车' , '柴油车') as fuelValue ,
+					controller.T_AUTO_COMMUNICATION_ID as fkAutoCommunication,
+					controller.T_COMMUNICATION_ID as fkCommunication,
+					terminal.T_AUTO_COMMUNICATION_ID as autoCommunication,
+					terminal.T_COMMUNICATION_ID as communication,
+					car.order_number as orderNumber , 
+					car.online_time as onlineTime,
+					car.sync_time as syncTime,
+					car.CAR_DATE as carDate,
+					car.vfactory,
+					car.VIN_OLD as vinOld,
+					car.CHASSIS_NUM_OLD as chassisOld
+
+				FROM 
+					hy_car car left join hy_car_detail car_detail on car.CAR_ID = car_detail.CAR_ID
+					left join hy_team team on car.car_team_id = team.t_id and team.del_flag = 0 and team.t_type = 1
+					left join hy_terminal terminal on car.car_terminal = terminal.T_ID
+					left join hy_terminal controller on car.CAR_TERMINAL_ID = controller.T_ID
+					left join hy_business business on car_detail.CAR_OWNER = business.cid
+					left join (select * from hy_basicdata where DATA_TYPE = 2) car_type on car.CAR_TYPE = car_type.data_id
+					left join (select * from hy_basicdata where DATA_TYPE = 40) engine_type on car_detail.ENGINE_TYPE = engine_type.data_code
+					left join (select * from hy_basicdata where DATA_TYPE = 39) sale_status on car_detail.SALES_STATUS = sale_status.data_code
+					left join (select * from hy_basicdata where DATA_TYPE = 39) aak_sale_status on car_detail.MB_SALES_STATUS = aak_sale_status.data_code
+					left join (select * from hy_basicdata where DATA_TYPE = 91) enter_mode on car.AUTO_FLAG = enter_mode.DATA_CODE
+					left join hy_service_station hss on car.CREATE_STATION_ID = hss.id and hss.station_enable = 1 and hss.DEL_FLAG=0
+				where
+					1=1
+					and
+					car.DEL_FLAG = 0
+				<#if car_id?? >
+					and car.CAR_ID = ${car_id}
+					
+				<#else>
+					<#if structureNum??>
+						and IF(LOCATE('${structureNum}' , ifnull (car.STRUCTURE_NUM , car.VIN_OLD)) > 0 , 1 , if(LOCATE('${structureNum}' , IFNULL(car.VIN_OLD , car.STRUCTURE_NUM)) > 0 , 1 , 0)) > 0
+					</#if>
+					<#if chassis?? && chassis != "">
+						and if(LOCATE('${chassis}' , ifnull (car.CHASSIS_NUM , car.CHASSIS_NUM_OLD)) > 0 , 1 , if(LOCATE('${chassis}' , IFNULL(car.CHASSIS_NUM_OLD , car.CHASSIS_NUM))  , 1 , 0)) > 0
+					</#if> 
+					<#if cph?? && cph != "">
+					 	and car.CAR_CPH like '%${cph}%'  escape '!'
+					</#if>
+					<#if carType?? && carType != "" && carType != '-1'>
+					 	and car.CAR_TYPE in (${carType}) 
+					</#if>
+					<#if engineNumber?? && engineNumber != "">
+					 	and car_detail.ENGINE_NUMBER like '%${engineNumber}%' escape '!'
+					</#if>
+					<#if engineType?? && engineType != "" && engineType != '-1'>
+						and car_detail.ENGINE_TYPE in (${engineType}) 
+					</#if>
+					<#if companyName?? && companyName != "">
+						and team.t_name like '%${companyName}%'  escape '!'
+					</#if>
+					<#if businessName?? && businessName != "">
+						and business.business_name like '%${businessName}%'  escape '!'
+					</#if>
+					<#if tcode?? && tcode != "">
+						and terminal.T_CODE like '%${tcode}%'  escape '!'
+					</#if>
+					<#if fkCode?? && fkCode != "">
+						and controller.T_CODE like '%${fkCode}%'  escape '!'
+					</#if>
+					<#if beginRegDate?? && endRegDate?? >
+						and car.REGISTER_TIME BETWEEN ${beginRegDate} and ${endRegDate}
+					</#if>
+					<#if beginNetDate??  && endNetDate??>
+						and car.NETTING_TIME BETWEEN ${beginNetDate} and ${endNetDate}
+					</#if>
+					<#if stationName?? && stationName != "">
+						and hss.station_name like '%${stationName}%' escape '!'
+					</#if>
+
+					<#if instalType??>
+						and car.INSTAL_TYPE = ${instalType}
+					</#if>
+
+					<#if beginOffline?? && endOffline?? >
+						and car.online_time BETWEEN ${beginOffline} and ${endOffline}
+					</#if>
+
+					<#if beginAssembleTime?? && endAssembleTime??>
+						and car.CAR_DATE BETWEEN ${beginAssembleTime} and ${endAssembleTime}
+					</#if>
+
+					<#if stdStatus?? >
+						and car_detail.SALES_STATUS = ${stdStatus}
+					</#if>
+
+					<#if aakStatus??>
+						and car_detail.MB_SALES_STATUS = ${aakStatus}
+					</#if>
+					<#if vfactory??>
+						and car.vfactory = '${vfactory}'
+					</#if>
+					<#if fuel??>
+						and car_detail.fuel = ${fuel}
+					</#if>
+				</#if>
+					order by car.CAR_ID desc
+			</#if>
+    	]]>
+    </sql-query>
+
+	<sql-query name="queryCarCount">
+	
+        <![CDATA[	
+			<#if account_id??>
+				select	
+					temp_car.CAR_ID as carId
+				from
+				(
+				    SELECT
+				       car.CAR_ID , 
+				       car.CHASSIS_NUM , 
+				       car.CAR_CPH , 
+				       car.REGISTER_TIME , 
+				       car.CAR_TERMINAL_ID , 
+				       team.t_name , 
+				       team.DEALER_CODE , 
+				       team.T_ID,
+				       car_detail.ENGINE_NUMBER , 
+				       car_detail.SALES_DATE , 
+				       car.NETTING_TIME , 
+				       car.NETTING_LOG , car.NETTING_LAT , car_detail.invoice_number,
+				       car.CAR_TERMINAL , car_detail.CAR_OWNER , car.CAR_TYPE , car_detail.ENGINE_TYPE , car_detail.SALES_STATUS , car.AUTO_FLAG , car.REMOVAL_TIME ,
+				       car.car_color , car_detail.img_path , car.OIL_CAPACITY,
+				       car_detail.CAR_AMOUNT , car_detail.LOAN_AMOUNT , car_detail.SURPLUS as surplus , car.CREATE_STATION_ID , car.INSTAL_TYPE , car.OFFLINE_TIME , car_detail.MB_SALES_STATUS ,
+				       car_detail.MB_SALES_DATE , car.car_model_code , car_detail.ENGINE_TYPE_REAR , car.qr_code , car_detail.RATED_POWER , car_detail.MAXIMUM_POWER,
+				       car_detail.CURB_WEIGHT , car_detail.TOTAL_MASS , car_detail.fuel , car.order_number , car.online_time,
+				       car.sync_time,car.CAR_DATE , car.vfactory , car.STRUCTURE_NUM ,car.VIN_OLD , car.CHASSIS_NUM_OLD
+				       
+				    FROM
+				        hy_car car , hy_car_detail car_detail , (select * from hy_atc_mapping act , hy_team ht where ht.t_type = 1 and ht.del_flag = 0 and ht.t_id = act.CAR_TEAM_ID and act.ACCOUNT_ID = ${account_id}) team
+				    WHERE
+				        car.CAR_ID = car_detail.CAR_ID
+				    AND
+				        car.CAR_TEAM_ID = team.T_ID
+				    and
+				    	car.DEL_FLAG = 0
+				) temp_car left join hy_terminal terminal on temp_car.car_terminal = terminal.T_ID
+				left join hy_terminal controller on temp_car.CAR_TERMINAL_ID = controller.T_ID
+				left join hy_business business on temp_car.CAR_OWNER = business.cid
+				left join hy_service_station hss on temp_car.CREATE_STATION_ID = hss.id and hss.station_enable = 1 and hss.DEL_FLAG=0
+				where
+					1=1
+					<#if car_id??>
+						and temp_car.CAR_ID = ${car_id}
+					<#else>
+						
+						<#if structureNum??>
+							and IF(LOCATE('${structureNum}' , ifnull (temp_car.STRUCTURE_NUM , temp_car.VIN_OLD)) > 0 , 1 , if(LOCATE('${structureNum}' , IFNULL(temp_car.VIN_OLD , temp_car.STRUCTURE_NUM)) > 0 , 1 , 0)) > 0
+						</#if>
+						<#if chassis?? && chassis != "">
+							and if(LOCATE('${chassis}' , ifnull (temp_car.CHASSIS_NUM , temp_car.CHASSIS_NUM_OLD)) > 0 , 1 , if(LOCATE('${chassis}' , IFNULL(temp_car.CHASSIS_NUM_OLD , temp_car.CHASSIS_NUM))  , 1 , 0)) > 0
+						</#if>
+						<#if cph?? && cph != "">
+						 and temp_car.CAR_CPH like '%${cph}%'  escape '!'
+						</#if>
+						<#if carType?? && carType != "" && carType != '-1'>
+						 and temp_car.CAR_TYPE in (${carType})
+						</#if>
+						<#if engineNumber?? && engineNumber != "">
+						 and temp_car.ENGINE_NUMBER like '%${engineNumber}%'  escape '!'
+						</#if>
+						<#if engineType?? && engineType != "" && engineType != '-1'>
+						 and temp_car.ENGINE_TYPE in (${engineType})
+						</#if>
+						<#if companyName?? && companyName != "">
+						 and temp_car.t_name like '%${companyName}%'  escape '!'
+						</#if>
+						<#if businessName?? && businessName != "">
+						 and business.business_name like '%${businessName}%'  escape '!'
+						</#if>
+						<#if tcode?? && tcode != "">
+						 and terminal.T_CODE like '%${tcode}%'  escape '!'
+						</#if>
+						<#if fkCode?? && fkCode != "">
+						 and controller.T_CODE like '%${fkCode}%' escape '!'
+						</#if>
+						<#if beginRegDate?? && endRegDate??>
+						and temp_car.REGISTER_TIME BETWEEN ${beginRegDate} and ${endRegDate}
+						</#if>
+
+						<#if beginNetDate??  && endNetDate??>
+							and temp_car.NETTING_TIME BETWEEN ${beginNetDate} and ${endNetDate}
+						</#if>
+						<#if stationName?? && stationName != "">
+							and hss.station_name like '%${stationName}%' escape '!'
+						</#if>
+
+						<#if instalType??>
+							and temp_car.INSTAL_TYPE = ${instalType}
+						</#if>
+
+						<#if beginOffline?? && endOffline?? >
+							and temp_car.online_time BETWEEN ${beginOffline} and ${endOffline}
+						</#if>
+
+						<#if beginAssembleTime?? && endAssembleTime?? >
+							and temp_car.CAR_DATE BETWEEN ${beginAssembleTime} and ${endAssembleTime}
+						</#if>
+
+						<#if stdStatus??>
+							and temp_car.SALES_STATUS = ${stdStatus}
+						</#if>
+						<#if aakStatus??>
+							and temp_car.MB_SALES_STATUS = ${aakStatus}
+						</#if>
+						<#if vfactory??>
+                            and temp_car.vfactory = '${vfactory}'
+                        </#if>
+                        <#if fuel??>
+                            and temp_car.fuel = ${fuel}
+                        </#if>
+					</#if>
+			<#else>
+				select
+			    	car.CAR_ID as carId
+				FROM 
+					hy_car car left join hy_car_detail car_detail on car.CAR_ID = car_detail.CAR_ID
+					left join hy_team team on car.car_team_id = team.t_id and team.del_flag = 0 and team.t_type = 1
+					left join hy_terminal terminal on car.car_terminal = terminal.T_ID
+					left join hy_terminal controller on car.CAR_TERMINAL_ID = controller.T_ID
+					left join hy_business business on car_detail.CAR_OWNER = business.cid
+					left join hy_service_station hss on car.CREATE_STATION_ID = hss.id and hss.station_enable = 1 and hss.DEL_FLAG=0
+				where
+					1=1
+					and
+					car.DEL_FLAG = 0
+					<#if car_id?? >
+						and car.CAR_ID = ${car_id}
+					<#else>
+						
+						<#if structureNum??>
+							and IF(LOCATE('${structureNum}' , ifnull (car.STRUCTURE_NUM , car.VIN_OLD)) > 0 , 1 , if(LOCATE('${structureNum}' , IFNULL(car.VIN_OLD , car.STRUCTURE_NUM)) > 0 , 1 , 0)) > 0
+						</#if>
+						<#if chassis?? && chassis != "">
+							and if(LOCATE('${chassis}' , ifnull (car.CHASSIS_NUM , car.CHASSIS_NUM_OLD)) > 0 , 1 , if(LOCATE('${chassis}' , IFNULL(car.CHASSIS_NUM_OLD , car.CHASSIS_NUM))  , 1 , 0)) > 0
+						</#if> 
+						<#if cph?? && cph != "">
+						 and car.CAR_CPH like '%${cph}%'  escape '!'
+						</#if>
+						<#if carType?? && carType != "" && carType != '-1'>
+						 and car.CAR_TYPE in (${carType})
+						</#if>
+						<#if engineNumber?? && engineNumber != "">
+						 and car_detail.ENGINE_NUMBER like '%${engineNumber}%' escape '!'
+						</#if>
+						<#if engineType?? && engineType != "" && engineType != '-1'>
+						 and car_detail.ENGINE_TYPE in (${engineType})
+						</#if>
+						<#if companyName?? && companyName != "">
+						 and team.t_name like '%${companyName}%'  escape '!'
+						</#if>
+						<#if businessName?? && businessName != "">
+						 and business.business_name like '%${businessName}%'  escape '!'
+						</#if>
+						<#if tcode?? && tcode != "">
+						 and terminal.T_CODE like '%${tcode}%'  escape '!'
+						</#if>
+						<#if fkCode?? && fkCode != "">
+						 and controller.T_CODE like '%${fkCode}%'  escape '!'
+						</#if>
+						<#if beginRegDate?? && endRegDate?? >
+						and car.REGISTER_TIME BETWEEN ${beginRegDate} and ${endRegDate}
+						</#if>
+						<#if beginNetDate??  && endNetDate??>
+						and car.NETTING_TIME BETWEEN ${beginNetDate} and ${endNetDate}
+						</#if>
+						<#if stationName?? && stationName != "">
+							and hss.station_name like '%${stationName}%' escape '!'
+						</#if>
+
+						<#if instalType??>
+							and car.INSTAL_TYPE = ${instalType}
+						</#if>
+
+						<#if beginOffline?? && endOffline?? >
+							and car.online_time BETWEEN ${beginOffline} and ${endOffline}
+						</#if>
+
+						<#if beginAssembleTime?? && endAssembleTime??>
+							and car.CAR_DATE BETWEEN ${beginAssembleTime} and ${endAssembleTime}
+						</#if>
+						<#if stdStatus?? >
+							and car_detail.SALES_STATUS = ${stdStatus}
+						</#if>
+
+						<#if aakStatus??>
+							and car_detail.MB_SALES_STATUS = ${aakStatus}
+						</#if>
+						<#if vfactory??>
+                            and car.vfactory = '${vfactory}'
+                        </#if>
+                        <#if fuel??>
+                            and car_detail.fuel = ${fuel}
+                        </#if>
+					</#if>
+			</#if>
+    	]]>
+	</sql-query>
+
+    <sql-query name="logicalDeleteCar">
+        <![CDATA[
+    		update hy_car set DEL_FLAG = 1 , sync_time = '${sync_time}' where car_id = ${carId}
+    	]]>
+    </sql-query>
+
+    <sql-query name="logicalDeleteTerminal">
+        <![CDATA[
+    		update hy_terminal set DEL_FLAG = 1 where T_CODE = '${terminalId}'
+    	]]>
+    </sql-query>
+
+    <sql-query name="updateTerminal">
+        <![CDATA[
+    		update hy_terminal set t_team_id = ${dealerId} where t_id = '${terminalId}'
+    	]]>
+    </sql-query>
+
+    <sql-query name="queryCarById">
+        <![CDATA[
+			SELECT
+				IFNULL(car.CAR_TERMINAL,'') as terminalCode,
+				IFNULL(car.CAR_TERMINAL_ID,'') as fkCode,
+				car.NETTING_TIME as firstGpsTimeStr,
+				IFNULL((car.NETTING_LOG * 0.000001),"") as firstGpsLng, IFNULL((car.NETTING_LAT * 0.000001),"") as firstGpsLat,
+				car.auto_flag as autoFlag,
+				car.order_number as orderNumber
+			FROM
+				hy_car car
+			WHERE
+				car.CAR_ID = ${id}
+				
+    	]]>
+    </sql-query>
+
+    <sql-query name="queryInvoiceNumber">
+        <![CDATA[
+			SELECT
+				detail.invoice_number as invoiceNumber
+			FROM
+				hy_car_detail detail
+			WHERE
+				detail.invoice_number = ${invoiceNumber}
+				<#if carId??>
+				and
+				detail.car_id != ${carId}
+				</#if>
+    	]]>
+    </sql-query>
+
+    <!--查询终端通讯号-->
+    <sql-query name="queryCommunicationId">
+        <![CDATA[
+            SELECT
+            IFNULL(T.T_AUTO_COMMUNICATION_ID, T.T_COMMUNICATION_ID ) AS communicationId
+            FROM hy_terminal T
+            WHERE  1= 1 AND T.DEL_FLAG != ${delFlag} AND T.T_ID = ${id}
+		]]>
+    </sql-query>
+
+    <sql-query name="queryCarWithRelevance">
+        <![CDATA[
+    		<#if account_id??>
+				select
+					temp_car.CAR_ID as carId , temp_car.CHASSIS_NUM chassisNum , IFNULL(temp_car.CAR_CPH,'') as cph , temp_car.REGISTER_TIME as registerTimeStr,
+					IFNULL(temp_car.t_name,'') as companyName,IFNULL(temp_car.DEALER_CODE,'') as dealerCode , IFNULL(business.business_name,'') as businessName,
+					IFNULL(car_type.DATA_VALUE,'') as car_TYPE_VALUE,IFNULL(engine_type.DATA_VALUE,'') as engine_TYPE_VALUE , IFNULL(temp_car.ENGINE_NUMBER,'') as engineNumber,
+					sale_status.DATA_VALUE as salesStatusValue , temp_car.SALES_DATE as salesDateStr,
+					enter_mode.data_value as autoFlagStr,temp_car.REMOVAL_TIME as removalTimeStr,
+					temp_car.NETTING_TIME as firstGpsTimeStr,IFNULL((temp_car.NETTING_LOG * 0.000001),"") as firstGpsLng, IFNULL((temp_car.NETTING_LAT * 0.000001),"") as firstGpsLat,
+					IFNULL(temp_car.invoice_number,'') as invoiceNumber,IFNULL(business.business_code,'') as businessCode , temp_car.t_id as dealerId , temp_car.CAR_TYPE as carType ,
+					temp_car.SALES_STATUS as saleSatusId , temp_car.STRUCTURE_NUM as sturctureNum , temp_car.car_color as color , business.cid , temp_car.ENGINE_TYPE as engineType , temp_car.img_path ,temp_car.OIL_CAPACITY as oilCapacity,
+					temp_car.CAR_AMOUNT as carAmount , temp_car.LOAN_AMOUNT as loanAmount , temp_car.SURPLUS as surplus , temp_car.CREATE_STATION_ID as createStationId , hss.station_name as stationName , temp_car.INSTAL_TYPE as instalType , if(temp_car.INSTAL_TYPE = 1,'前装' , '后装') as instalTypeDesc , temp_car.OFFLINE_TIME as offlineTime,
+					temp_car.MB_SALES_DATE as mbSaleDate , aak_sale_status.DATA_VALUE as aakStatusValue , temp_car.MB_SALES_STATUS as mbSalesStatus,
+					temp_car.car_model_code as carModelCode , temp_car.RATED_POWER as ratedPower , temp_car.MAXIMUM_POWER as maximumPower , temp_car.CURB_WEIGHT as curbWeight , temp_car.TOTAL_MASS as totalMass
+				from
+				(
+				    SELECT
+				       car.CAR_ID , car.CHASSIS_NUM , car.CAR_CPH , car.REGISTER_TIME , car.CAR_TERMINAL_ID , team.t_name , team.DEALER_CODE , team.T_ID,
+				       car_detail.ENGINE_NUMBER , car_detail.SALES_DATE , car.NETTING_TIME , car.NETTING_LOG , car.NETTING_LAT , car_detail.invoice_number,
+				       car.CAR_TERMINAL , car_detail.CAR_OWNER , car.CAR_TYPE , car_detail.ENGINE_TYPE , car_detail.SALES_STATUS , car.AUTO_FLAG , car.REMOVAL_TIME ,
+				       car.STRUCTURE_NUM , car.car_color , car_detail.img_path , car.OIL_CAPACITY,
+				       car_detail.CAR_AMOUNT , car_detail.LOAN_AMOUNT , car_detail.SURPLUS as surplus , car.CREATE_STATION_ID , car.INSTAL_TYPE , car.OFFLINE_TIME , car_detail.MB_SALES_STATUS ,
+				       car_detail.MB_SALES_DATE , car.car_model_code , car_detail.RATED_POWER , car_detail.MAXIMUM_POWER , car_detail.CURB_WEIGHT , car_detail.TOTAL_MASS
+				    FROM
+				        hy_car car , hy_car_detail car_detail , (select * from hy_atc_mapping act , hy_team ht where ht.t_type = 1 and ht.del_flag = 0 and ht.t_id = act.CAR_TEAM_ID and act.ACCOUNT_ID = ${account_id}) team
+				    WHERE
+				        car.CAR_ID = car_detail.CAR_ID
+				    AND
+				        car.CAR_TEAM_ID = team.T_ID
+				    AND
+						car.CAR_TERMINAL is null
+					AND
+						car.CAR_TERMINAL_ID is null
+					AND
+						car.DEL_FLAG = 0
+				) temp_car
+				left join hy_business business on temp_car.CAR_OWNER = business.cid
+				left join (select * from hy_basicdata where DATA_TYPE = 2) car_type on temp_car.CAR_TYPE = car_type.data_id
+				left join (select * from hy_basicdata where DATA_TYPE = 40) engine_type on temp_car.ENGINE_TYPE = engine_type.data_code
+				left join (select * from hy_basicdata where DATA_TYPE = 39) sale_status on temp_car.SALES_STATUS = sale_status.data_code
+				left join (select * from hy_basicdata where DATA_TYPE = 39) aak_sale_status on temp_car.MB_SALES_STATUS = aak_sale_status.data_code
+				left join (select * from hy_basicdata where DATA_TYPE = 91) enter_mode on temp_car.AUTO_FLAG = enter_mode.DATA_CODE
+				left join hy_service_station hss on temp_car.CREATE_STATION_ID = hss.id and hss.station_enable = 1 and hss.DEL_FLAG=0
+				where
+					1=1
+				<#if chassis?? && chassis != "">
+					and car.CHASSIS_NUM like '%${chassis}%' escape '!'
+				</#if>
+    		<#else>
+				select
+			    	car.CAR_ID as carId , car.CHASSIS_NUM chassisNum , IFNULL(car.CAR_CPH,'') as cph , car.REGISTER_TIME as registerTimeStr,
+					IFNULL(team.t_name,'') as companyName,IFNULL(team.DEALER_CODE,'') as dealerCode , IFNULL(business.business_name,'') as businessName,
+					IFNULL(car_type.DATA_VALUE,'') as car_TYPE_VALUE,IFNULL(engine_type.DATA_VALUE,'') as engine_TYPE_VALUE , IFNULL(car_detail.ENGINE_NUMBER,'') as engineNumber,
+					sale_status.DATA_VALUE as salesStatusValue , car_detail.SALES_DATE as salesDateStr,
+					enter_mode.data_value as autoFlagStr,car.REMOVAL_TIME as removalTimeStr,
+					car.NETTING_TIME as firstGpsTimeStr,IFNULL((car.NETTING_LOG * 0.000001),"") as firstGpsLng, IFNULL((car.NETTING_LAT * 0.000001),"") as firstGpsLat,
+					IFNULL(car_detail.invoice_number,'') as invoiceNumber,IFNULL(business.business_code,'') as businessCode , team.T_ID as dealerId , car.CAR_TYPE as carType,
+					car_detail.SALES_STATUS as saleSatusId , car.STRUCTURE_NUM as sturctureNum , car.CAR_COLOR as color , business.cid , car_detail.ENGINE_TYPE as engineType , car_detail.img_path , car.OIL_CAPACITY as oilCapacity,
+					car_detail.CAR_AMOUNT as carAmount , car_detail.LOAN_AMOUNT as loanAmount , car_detail.SURPLUS as surplus , car.CREATE_STATION_ID as createStationId , hss.station_name as stationName ,car.INSTAL_TYPE as instalType , if(car.INSTAL_TYPE = 1,'前装' , '后装') as instalTypeDesc , car.OFFLINE_TIME as offlineTime , 
+					car_detail.MB_SALES_DATE as mbSaleDate , aak_sale_status.DATA_VALUE as aakStatusValue , car_detail.MB_SALES_STATUS as mbSalesStatus , car.car_model_code as carModelCode,
+					car_detail.RATED_POWER as ratedPower , car_detail.MAXIMUM_POWER as maximumPower , car_detail.CURB_WEIGHT as curbWeight , car_detail.TOTAL_MASS as totalMass
+				FROM
+					hy_car car left join hy_car_detail car_detail on car.CAR_ID = car_detail.CAR_ID
+					left join hy_team team on car.car_team_id = team.t_id and team.del_flag = 0 and team.t_type = 1
+					left join hy_business business on car_detail.CAR_OWNER = business.cid
+					left join (select * from hy_basicdata where DATA_TYPE = 2) car_type on car.CAR_TYPE = car_type.data_id
+					left join (select * from hy_basicdata where DATA_TYPE = 40) engine_type on car_detail.ENGINE_TYPE = engine_type.data_code
+					left join (select * from hy_basicdata where DATA_TYPE = 39) sale_status on car_detail.SALES_STATUS = sale_status.data_code
+					left join (select * from hy_basicdata where DATA_TYPE = 39) aak_sale_status on car_detail.MB_SALES_STATUS = aak_sale_status.data_code
+					left join (select * from hy_basicdata where DATA_TYPE = 91) enter_mode on car.AUTO_FLAG = enter_mode.DATA_CODE
+					left join hy_service_station hss on car.CREATE_STATION_ID = hss.id and hss.station_enable = 1 and hss.DEL_FLAG=0
+				where
+					1=1
+				AND
+					car.CAR_TERMINAL is NULL
+				AND
+					car.CAR_TERMINAL_ID is NULL
+				<#if chassis?? && chassis != "">
+					and car.CHASSIS_NUM like '%${chassis}%' escape '!'
+				</#if>
+    		</#if>
+    	]]>
+    </sql-query>
+
+    <sql-query name="queryCarWithChassisNum">
+        <![CDATA[
+
+			SELECT
+				temp.CHASSIS_NUM as chassis , temp.VEHICLE_VIN as vechicleVin , temp.VEHICLE_CODE as vechicleCode , temp.OFFLINE_DATE as offlineTime,
+				temp.ENGINE_NUM as engineNum ,  p.CX as cx , p.FDJ as fdj,p.EDGL as edgl , p.ZBZL as zbzl , p.ZZZ as zzl
+			FROM
+			(
+			SELECT
+				mes.CHASSIS_NUM  , mes.VEHICLE_VIN  , mes.VEHICLE_CODE  , mes.OFFLINE_DATE ,
+				mes.ENGINE_NUM
+			FROM
+				hy_car_mesdata mes
+			WHERE
+				1=1
+				<#if chassis?? && chassis != "">
+				and	mes.CHASSIS_NUM like '%${chassis}%' escape '!'
+				</#if>
+			) temp left JOIN hy_car_param p on SUBSTRING(temp.VEHICLE_CODE,1 , 15) = p.CXM
+			UNION
+			SELECT
+				temp.CHASSIS_NUM as chassis , temp.VEHICLE_VIN as vechicleVin , temp.VEHICLE_CODE as vechicleCode , temp.OFFLINE_DATE as offlineTime,
+				temp.ENGINE_NUM as engineNum ,  p.CX as cx , p.FDJ as fdj,p.EDGL as edgl , p.ZBZL as zbzl , p.ZZZ as zzz
+			FROM
+			(
+			SELECT
+				mes.CHASSIS_NUM  , mes.VEHICLE_VIN  , mes.VEHICLE_CODE  , mes.OFFLINE_DATE ,
+				mes.ENGINE_NUM
+			FROM
+				hy_car_mesdata mes
+			WHERE
+				1=1
+				<#if chassis?? && chassis != "">
+				and	mes.CHASSIS_NUM like '%${chassis}%' escape '!'
+				</#if>
+			) temp left JOIN hy_car_param p on SUBSTRING(temp.VEHICLE_CODE , 1, 15) = p.lcxm
+			
+    	]]>
+    </sql-query>
+
+    <!-- 根据车型码获取model_code -->
+    <sql-query name="selectVehicleTypeAndBasicIdByTypeCode">
+        <![CDATA[
+			SELECT DISTINCT
+				DATA_ID as dataId,DATA_VALUE as dataValue
+			FROM
+				hy_basicdata BC
+			JOIN v_rel_cxm_car_model CCM ON BC.data_value = CCM.car_model
+			WHERE
+				BC.data_type = 2
+			AND BC.data_value = (
+				SELECT
+					car_model
+				FROM
+					v_rel_cxm_car_model
+				WHERE
+					model_code = (SELECT CONCAT(SUBSTRING('${car_model}', 1, 1), SUBSTRING('${car_model}', 3, 3)))
+			)
+    	]]>
+
+    </sql-query>
+
+    <!-- 根据车型码获取最大功率 -->
+    <sql-query name="selectCarParamByVehicleTypeCode">
+        <![CDATA[
+			SELECT
+				LEFT(JGL,LENGTH(JGL)-2) as zdgl
+			FROM
+				hy_car_param
+			WHERE CXM = '${car_model}' or CXM = (SELECT LEFT('${car_model}',LENGTH('${car_model}')-2))
+    	]]>
+    </sql-query>
+
+    <sql-query name="queryTerminalWithIdOrSim">
+        <![CDATA[
+			SELECT
+				temp.id , temp.sim , temp.type_name , temp.tCode , temp.type_id , temp.t_style as tstyle , temp.t_team_id as dealerId
+			FROM
+			(
+						select
+			    			ht.T_ID id , ht.T_CODE tCode , ht.T_SIM sim , htt.type_name type_name , htt.TYPE_ID type_id , ht.T_STYLE , ht.t_team_id , ht.DEL_FLAG
+			    		from
+			    			hy_terminal ht , hy_terminal_type htt
+
+			    		where
+			    			1=1
+			    			and
+			    			ht.t_team_id = ${dealerId}
+			    			and
+			    			ht.t_style = 0
+			    			and
+			    			ht.T_TYPE_ID = htt.type_id
+			) temp
+			where
+			temp.DEL_FLAG = 0
+			and
+			temp.id not in (
+			    				select
+			    				hc.car_terminal_id as id
+			    				from
+			    					hy_car hc
+			    				where
+			    					hc.car_team_id = #{dealerId}
+									AND
+									hc.car_terminal_id is not null
+								)
+
+			<#if fruzzy != "" >
+				and (
+					temp.tCode LIKE CONCAT(CONCAT('%', '${fruzzy}'), '%') escape '!'
+					or temp.sim like CONCAT(CONCAT('%' , '${fruzzy}') , '%') escape '!'
+					)
+   			</#if>
+			union
+			SELECT
+				temp.id , temp.sim , temp.type_name , temp.tCode , temp.type_id , temp.t_style as tstyle , temp.t_team_id as dealerId
+			FROM
+			(
+						select
+			    			ht.T_ID id , ht.T_CODE tCode , ht.T_SIM sim , htt.type_name type_name , htt.TYPE_ID type_id , ht.T_STYLE , ht.t_team_id , ht.DEL_FLAG
+			    		from
+			    			hy_terminal ht , hy_terminal_type htt
+
+			    		where
+			    			1=1
+			    			and
+			    			ht.t_team_id = ${dealerId}
+			    			and
+			    			ht.t_style = 1
+			    			and
+			    			ht.T_TYPE_ID = htt.type_id
+			) temp
+			where
+			temp.DEL_FLAG = 0
+			and
+			temp.id not in (
+			    				select
+			    				hc.car_terminal as id
+			    				from
+			    					hy_car hc
+			    				where
+			    					hc.car_team_id = #{dealerId}
+									AND
+									hc.car_terminal is not null
+								)
+
+			<#if fruzzy != "" >
+				and (
+					temp.tCode LIKE CONCAT(CONCAT('%', '${fruzzy}'), '%') escape '!'
+					or temp.sim like CONCAT(CONCAT('%' , '${fruzzy}') , '%') escape '!'
+					)
+   			</#if>
+   			
+    	]]>
+    </sql-query>
+
+    <sql-query name="hasDoubleCode">
+        <![CDATA[
+			select
+				temp_business.businessCode , temp_business.addressCode , temp_business.businessName , temp_business.id , temp_business.addressName , temp_business.addressCommon , temp_business.linkTelpone , concat(ba.name , temp_business.govName) as govName , temp_business.c_type as ctype , temp_business.vehicleLic_code as drivingLicense
+			from
+			(
+			SELECT
+					hb.business_code businessCode , hb.address_code addressCode , hb.business_name businessName , hb.cid as id , ba.name addressName , hb.address_common addressCommon , hb.link_telpone as linkTelpone , ba.name as govName , ba.parent_id , hb.c_type , hb.vehicleLic_code
+				FROM
+					hy_business hb , base_area ba
+				WHERE
+					1=1
+				AND
+					hb.address_code = ba.id
+			) temp_business left join base_area ba on temp_business.parent_id = ba.id
+			where
+				1=1
+			<#if businessCode?? && businessCode != "">
+				and temp_business.businessCode = '${businessCode}'
+			</#if>
+			<#if drivingLicense?? && drivingLicense != "">
+				and temp_business.drivingLicense = '${drivingLicense}'
+			</#if>
+			order by temp_business.id desc
+    	]]>
+    </sql-query>
+
+    <sql-query name="queryServiceStationWithName">
+        <![CDATA[
+    			select
+					hss.id , hss.station_name as stationName , hss.address as stationAddress , hss.service_code as serviceCode , hss.team_id as teamId , hss.povince as cityCode
+				from
+
+					hy_service_station hss
+				where
+					1=1
+				and
+					hss.station_enable = 1
+				and
+					hss.DEL_FLAG=0
+				<#if stationId?? >
+					and hss.id = ${stationId}
+				</#if>
+				<#if stationName?? && stationName != "">
+					and hss.station_name like CONCAT(CONCAT('%' , '${stationName}') , '%') escape '!'
+				</#if>
+    	]]>
+    </sql-query>
+
+    <sql-query name="queryTerminalByTerminalId">
+        <![CDATA[
+    		select
+    			ht.o_team_id as orgTeamId
+    		from
+    			hy_terminal ht
+    		where
+    			ht.T_ID = ${orgTerminalId}
+    	]]>
+    </sql-query>
+
+    <sql-query name="updateTerminalTeam">
+        <![CDATA[
+    		update hy_terminal set T_TEAM_ID = ${orgTeamId} where t_id = ${orgTerminalId}
+    	]]>
+    </sql-query>
+
+    <sql-query name="queryTerminalByTid">
+        <![CDATA[
+    		select ht.T_TEAM_ID as orgTeamId , ht.T_COMMUNICATION_ID as communicationId , ht.t_id as id , ht.T_AUTO_COMMUNICATION_ID as autoCommunicationId , ht.T_SIM as simNo
+    		from
+    			hy_terminal ht
+    		where
+    			ht.t_id = ${orgTerminalId}
+    	]]>
+    </sql-query>
+
+    <sql-query name="hasQrCode">
+        <![CDATA[
+	    	select
+	    		hc.CAR_ID as id
+	    	from
+	    		hy_car hc
+	    	where
+	    		1=1
+	    		and
+	    		hc.DEL_FLAG = 0
+	    		<#if qr?? >
+	    			and hc.qr_code = '${qr}'
+	    		</#if>
+	    		<#if id?? >
+	    			and hc.CAR_ID != ${id}
+	    	</#if>
+    	]]>
+    </sql-query>
+    
+    <sql-query name="hasCarModelCode">
+        <![CDATA[
+        	select
+        		hc.CAR_ID as id
+        	from
+        		hy_car hc
+	    	where
+	    		1=1
+	    	and
+	    		hc.DEL_FLAG = 0
+	    	<#if carModelCode?? >
+	    		and hc.car_model_code = '${carModelCode}'
+	    	</#if>
+	    	<#if id?? >
+	    		and hc.CAR_ID != ${id}
+	    	</#if>
+    	]]>
+    </sql-query>
+    
+    <sql-query name="queryEngineType">
+        <![CDATA[
+			SELECT
+			hb.data_id as id , hb.data_code as dataCode , hb.data_value as dataValue , hb.data_type as dataType
+			FROM
+				hy_basicdata hb
+			WHERE
+				if (LOCATE(hb.data_value , '${engineType}') > 0 and hb.data_type = 40 , 1 , 0) > 0
+    	]]>
+    </sql-query>
+</dynamic-hibernate-statement>

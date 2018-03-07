@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+<dynamic-hibernate-statement>
+
+	<!-- 查询用户权限下车辆-->
+	<sql-query name="queryVehicles">
+		<![CDATA[
+            SELECT
+                car.CAR_ID carId,
+                IFNULL  ( ter.T_AUTO_COMMUNICATION_ID, ter.T_COMMUNICATION_ID ) AS commId
+            FROM
+                hy_car car
+            INNER JOIN
+                hy_terminal ter
+            ON
+                ter.T_ID = IF ( CAR_TERMINAL_ID IS NOT NULL AND CAR_TERMINAL_ID > 0, CAR_TERMINAL_ID, CAR_TERMINAL )
+            WHERE
+                car.DEL_FLAG = 0
+		]]>
+	</sql-query>
+
+    <sql-query name="queryCounts">
+        <![CDATA[
+			SELECT COUNT(*) as counts
+			FROM hy_car WHERE DEL_FLAG = 0
+			and online_time is not null and online_time!=0
+	    ]]>
+    </sql-query>
+
+	<sql-query name="queryYearCounts">
+		<![CDATA[
+			SELECT COUNT(*) as yearCounts
+			FROM hy_car WHERE DEL_FLAG = 0
+			and online_time is not null and online_time!=0
+			AND FROM_UNIXTIME(UNIX_TIMESTAMP(NOW()),'%Y') = FROM_UNIXTIME(online_time,'%Y');
+	    ]]>
+	</sql-query>
+
+	<sql-query name="queryMonthCounts">
+		<![CDATA[
+			SELECT COUNT(*) as monthCounts
+			FROM hy_car WHERE DEL_FLAG = 0 AND FROM_UNIXTIME(UNIX_TIMESTAMP(NOW()),'%Y-%m') = FROM_UNIXTIME(online_time,'%Y-%m');
+	    ]]>
+	</sql-query>
+
+	<sql-query name="queryDayOffLineCounts">
+		<![CDATA[
+			SELECT COUNT(*) as dayOffLineCounts
+			FROM hy_car WHERE DEL_FLAG = 0 AND FROM_UNIXTIME(UNIX_TIMESTAMP(NOW()),'%Y-%m-%d') = FROM_UNIXTIME(online_time,'%Y-%m-%d');
+	    ]]>
+	</sql-query>
+
+	<sql-query name="queryDayStorageCounts">
+		<![CDATA[
+			SELECT COUNT(*) as dayStorageCounts
+			FROM product_operate_record record
+			WHERE record.prev_process = '0005' AND record.curr_process = '0006'
+			AND FROM_UNIXTIME(UNIX_TIMESTAMP(NOW()),'%Y-%m-%d') = FROM_UNIXTIME(UNIX_TIMESTAMP(record.create_time),'%Y-%m-%d')
+	    ]]>
+	</sql-query>
+</dynamic-hibernate-statement>

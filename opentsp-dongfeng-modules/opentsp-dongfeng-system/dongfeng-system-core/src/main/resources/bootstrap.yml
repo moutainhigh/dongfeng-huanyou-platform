@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: dongfeng-system-core
+
+  cloud:
+    config:
+      env: default
+      label: dongfeng
+      uri: http://opentsp-configuration:8900

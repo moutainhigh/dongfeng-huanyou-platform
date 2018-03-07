@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+
+<dynamic-hibernate-statement>
+    <!-- 查询统计总数-->
+    <sql-query name="queryVehicleCounts">
+        <![CDATA[
+            select
+                FROM_UNIXTIME(A.CAR_DATE,'%c/%e') as date,
+                count(*) as count
+            from hy_car A
+            <#if accountId?? && accountType != 1>
+                INNER JOIN (select station_id as stationId from hy_account_station where account_id = ${accountId})  C ON C.stationId = A.CREATE_STATION_ID
+            </#if>
+            where A.CAR_DATE is not null and A.INSTAL_TYPE = 2 and A.del_flag = 0
+            <#if startTime?? && endTime??>
+               AND A.CAR_DATE BETWEEN ${startTime} AND ${endTime}
+            </#if>
+            group by FROM_UNIXTIME(A.CAR_DATE,'%c/%e')
+            order by A.CAR_DATE ASC
+		]]>
+    </sql-query>
+
+    <!-- 查询统计详情-->
+    <sql-query name="queryVehicleDetails">
+        <![CDATA[
+            select
+                result.serviceStation as serviceStation,
+                result.serviceStationCode as serviceStationCode,
+                result.lon as lon,
+                result.lat as lat,
+                result.date as date,
+                count(*) as count
+            from (
+                select
+                    B.station_name as serviceStation,
+                    B.service_code as serviceStationCode,
+                    FORMAT(B.longitude/1000000,6) as lon,
+                    FORMAT(B.latitude/1000000,6) as lat,
+                    FROM_UNIXTIME(A.CAR_DATE,'%Y-%m-%d') as date
+                from hy_car A
+                left join hy_service_station B on A.CREATE_STATION_ID = B.ID
+                <#if accountId?? && accountType != 1>
+                    INNER JOIN (select station_id as stationId from hy_account_station where account_id = ${accountId})  C ON C.stationId = A.CREATE_STATION_ID
+                </#if>
+                where A.CAR_DATE is not null and A.INSTAL_TYPE = 2 and A.del_flag = 0 and  B.DEL_FLAG != 1
+                <#if startTime?? && endTime??>
+                    AND A.CAR_DATE BETWEEN ${startTime} AND ${endTime}
+                </#if>
+                group by FROM_UNIXTIME(A.CAR_DATE,'%Y-%m-%d'),A.CAR_ID
+                ) result
+            group by serviceStation,date
+            order by date
+		]]>
+    </sql-query>
+</dynamic-hibernate-statement>

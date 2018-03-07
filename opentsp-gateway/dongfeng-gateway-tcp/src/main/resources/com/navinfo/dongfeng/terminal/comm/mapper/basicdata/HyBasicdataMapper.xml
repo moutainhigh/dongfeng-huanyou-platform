@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.navinfo.dongfeng.terminal.comm.mapper.basicdata.HyBasicdataMapper" >
+  <resultMap id="BaseResultMap" type="com.navinfo.dongfeng.terminal.comm.model.basicdata.HyBasicdata" >
+    <id column="DATA_ID" property="dataId" jdbcType="BIGINT" />
+    <result column="DATA_CODE" property="dataCode" jdbcType="VARCHAR" />
+    <result column="DATA_VALUE" property="dataValue" jdbcType="VARCHAR" />
+    <result column="DATA_TYPE" property="dataType" jdbcType="INTEGER" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    DATA_ID, DATA_CODE, DATA_VALUE, DATA_TYPE
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
+    select 
+    <include refid="Base_Column_List" />
+    from hy_basicdata
+    where DATA_ID = #{dataId,jdbcType=BIGINT}
+  </select>
+  <select id="selectByCode" resultMap="BaseResultMap" parameterType="java.lang.String" >
+    select 
+    <include refid="Base_Column_List" />
+    from hy_basicdata
+    where DATA_CODE = #{dataCode,jdbcType=VARCHAR}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.util.List" >
+    delete from hy_basicdata
+    where DATA_ID in
+    <foreach collection="list" item="dataId" index="index"
+            open="(" close=")" separator=",">
+            #{dataId}
+    </foreach>
+  </delete>
+  <insert id="insert" parameterType="com.navinfo.dongfeng.terminal.comm.model.basicdata.HyBasicdata" >
+    insert into hy_basicdata ( DATA_CODE, DATA_VALUE, 
+      DATA_TYPE)
+    values ( #{dataCode,jdbcType=VARCHAR}, #{dataValue,jdbcType=VARCHAR}, 
+      #{dataType,jdbcType=INTEGER})
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.navinfo.dongfeng.terminal.comm.model.basicdata.HyBasicdata" >
+    update hy_basicdata
+    <set >
+      <if test="dataCode != null" >
+        DATA_CODE = #{dataCode,jdbcType=VARCHAR},
+      </if>
+      <if test="dataValue != null" >
+        DATA_VALUE = #{dataValue,jdbcType=VARCHAR},
+      </if>
+      <if test="dataType != null" >
+        DATA_TYPE = #{dataType,jdbcType=INTEGER},
+      </if>
+    </set>
+    where DATA_ID = #{dataId,jdbcType=BIGINT}
+  </update>
+   <select id="selectBasicdataByPage" resultMap="BaseResultMap" parameterType="Map" >
+   select <include refid="Base_Column_List" />
+	from  hy_basicdata 
+	where 1=1
+	<if test="dataCode != null" >
+       AND DATA_CODE = #{dataCode,jdbcType=VARCHAR}
+      </if>
+      <if test="dataValue != null" >
+       AND DATA_VALUE = #{dataValue,jdbcType=VARCHAR}
+      </if>
+      <if test="dataType != null" >
+       AND DATA_TYPE = #{dataType,jdbcType=INTEGER}
+      </if>
+    ORDER BY data_id desc
+    <if test="startindex!=null and maxindex!=null">
+	limit #{startindex},#{maxindex}
+	</if>
+  </select>
+    <select id="selectCountByPage" resultType="java.lang.Integer" parameterType="Map" >
+   select 
+   count(1)
+	from hy_basicdata bu
+		 where 1=1
+  </select>
+  <select id="selectByDatatype" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from hy_basicdata
+    where DATA_TYPE = #{dataType,jdbcType=INTEGER}
+  </select>
+  <select id="findBasicdataAll" resultMap="BaseResultMap"  >
+    select 
+    <include refid="Base_Column_List" />
+    from hy_basicdata
+  </select>
+  <select id="selectByTypeCode" resultMap="BaseResultMap" parameterType="java.util.Map" >
+   select <include refid="Base_Column_List" />
+	from  hy_basicdata 
+	where 1=1
+		<if test="dataType != null and dataType !=''" >
+      	 	AND DATA_TYPE = #{dataType,jdbcType=INTEGER}
+         </if>
+		<if test="dataCode != null and dataCode !=''" >
+      	 	AND DATA_CODE = #{dataCode,jdbcType=VARCHAR}
+         </if>
+     </select>
+</mapper>

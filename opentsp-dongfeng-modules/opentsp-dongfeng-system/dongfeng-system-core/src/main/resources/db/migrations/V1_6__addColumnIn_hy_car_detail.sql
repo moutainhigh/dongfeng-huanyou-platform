@@ -1,0 +1,1 @@
+alter table hy_car_detail add img_path VARCHAR(1024);

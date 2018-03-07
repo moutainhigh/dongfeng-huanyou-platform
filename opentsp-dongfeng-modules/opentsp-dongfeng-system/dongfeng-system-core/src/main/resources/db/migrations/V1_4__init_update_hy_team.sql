@@ -1,0 +1,3 @@
+ALTER TABLE `hy_team`
+ADD COLUMN `GOV_CODE_PRVC`  int(11) NULL COMMENT '省份编码' AFTER `land_area_radius`,
+ADD COLUMN `GOV_CODE_CITY`  int(11) NULL COMMENT '城市编码' AFTER `GOV_CODE_PRVC`;

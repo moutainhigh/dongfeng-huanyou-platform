@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+
+<dynamic-hibernate-statement>
+
+    <!--防控激活查询车辆及终端通信号信息(北斗和FK同时查询)-->
+    <sql-query name="queryCarByLockCarId">
+        <![CDATA[
+        SELECT
+			car.CAR_ID carId,
+			IFNULL(car.CAR_TERMINAL,0) bdTerId,
+			IFNULL(car.CAR_TERMINAL_ID,0) fkTerId,
+			detail.ENGINE_TYPE engineType,
+			fkter.T_CODE fkCode,
+			IFNULL ( bdter.T_AUTO_COMMUNICATION_ID, bdter.T_COMMUNICATION_ID ) bdCommId,
+			IFNULL ( fkter.T_AUTO_COMMUNICATION_ID, fkter.T_COMMUNICATION_ID ) fkCommId,
+			IFNULL(business.business_name,'')  customer,
+			IFNULL(car.CAR_CPH,'') plateNum,
+            team.T_NAME  dealer,
+            car.lock_method  lockMethod,
+            car.CHASSIS_NUM chassisNum
+            FROM
+                hy_car car
+            LEFT JOIN hy_terminal bdter ON bdter.T_ID =car.CAR_TERMINAL
+            LEFT JOIN hy_terminal fkter ON fkter.T_ID =car.CAR_TERMINAL_ID
+            INNER JOIN hy_car_detail detail ON car.CAR_ID = detail.CAR_ID
+            LEFT JOIN hy_business business ON business.cid = detail.CAR_OWNER
+            INNER JOIN hy_team team ON car.CAR_TEAM_ID = team.T_ID
+            WHERE
+                car.DEL_FLAG = 0
+            AND car.car_id =  #{carId}
+		]]>
+    </sql-query>
+
+
+</dynamic-hibernate-statement>

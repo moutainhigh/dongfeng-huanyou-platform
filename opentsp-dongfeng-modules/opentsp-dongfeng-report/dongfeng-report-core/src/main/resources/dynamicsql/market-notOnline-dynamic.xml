@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+
+<dynamic-hibernate-statement>
+	<sql-query name="queryWsxReport">
+		<![CDATA[
+	        select 
+				h.CHASSIS_NO chassis_no,
+				h.WORK_CENTER work_center,
+				h.MATERIALS_ID materials_id,
+				h.MATERIALS_NAME materials_name,
+				h.PLAN_TIME plan_time,
+				h.INSTOCK_TIME instock_time,
+				h.QUALIFIED_TIME qualified_time,
+				h.REMOVAL_TIME removal_time,
+				h.STORAGE_LOCATION storage_location,
+				h.SALE_ID sale_id,
+				h.XXSJ xx_sj,
+				h.ZXSJ zx_sj,
+				c.CAR_ID carId,
+				c.NETTING_TIME netting_time,
+				c.NETTING_LOG netting_log,
+				c.NETTING_LAT netting_lat,
+				IFNULL(ter.t_auto_communication_id,ter.t_communication_id) as commId
+			from hy_wsxreport h left join (
+			select
+				car.CAR_ID,
+				car.NETTING_TIME,
+				car.NETTING_LOG,
+				car.NETTING_LAT,
+				car.CAR_TERMINAL_ID,
+				car.CAR_TERMINAL,
+				car.CHASSIS_NUM,
+				car.del_flag
+			from
+				hy_car car
+		 <#if accountId?? && accountType?? && accountType != 1>
+			,hy_atc_mapping atc
+			where atc.CAR_TEAM_ID = car.CAR_TEAM_ID
+				and ATC_TYPE = 0
+				and atc.ACCOUNT_ID = ${accountId}
+		 </#if>	
+		) c on h.CHASSIS_NO = c.CHASSIS_NUM
+		INNER JOIN hy_terminal ter ON ter.T_ID = IF (CAR_TERMINAL_ID IS NOT NULL AND CAR_TERMINAL_ID > 0,CAR_TERMINAL_ID,CAR_TERMINAL)
+		where 1=1 and c.del_flag = 0 and h.REMOVAL_TIME is null and h.XXSJ IS NOT NULL 
+		   <#if chassis_no??>
+			and h.CHASSIS_NO LIKE CONCAT(CONCAT('%','${chassis_no}'),'%') escape '!'
+		  </#if>
+		  <#if storage_location??>
+		    and h.STORAGE_LOCATION LIKE CONCAT(CONCAT('%','${storage_location}'),'%') escape '!'
+		  </#if>
+		 <#if flag?? && flag=="1" >
+		    and c.NETTING_TIME IS NOT NULL
+		  </#if>
+		  <#if flag?? && flag=="2" >
+		    and c.NETTING_TIME IS NULL
+		  </#if>
+		  order by h.CHASSIS_NO desc
+		]]>
+	</sql-query>
+</dynamic-hibernate-statement>

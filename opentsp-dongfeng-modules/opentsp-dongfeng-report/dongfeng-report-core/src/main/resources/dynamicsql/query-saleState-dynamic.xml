@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+
+<dynamic-hibernate-statement>
+
+    <!-- 查询销售状态报表 -->
+    <sql-query name="querySaleStateReport">
+        <![CDATA[
+        select
+                hyc.car_id carId,
+                hyc.chassis_num chassisNum,
+                hyc.car_cph carCph,
+                hytbd.t_code terminalBDCode,
+                hytfk.t_code terminalFKCode,
+                IFNULL (hytbd.T_AUTO_COMMUNICATION_ID, hytbd.T_COMMUNICATION_ID ) bdCommunicationId,
+                IFNULL (hytfk.T_AUTO_COMMUNICATION_ID, hytfk.T_COMMUNICATION_ID ) fkCommunicationId,
+                hyc.car_team_id teamId,
+                hytm.t_name teamName,
+                hytm.DEALER_CODE teamCode,
+                hycd.car_owner carOwner,
+                hycd.ENGINE_TYPE_REAR engNumber,
+                hyb.business_name carOwnerName,
+                hyc.car_type carType,
+                carType.data_value carTypeName,
+                hycd.engine_type engType,
+                enType.data_value engTypeName,
+                hycd.MB_SALES_DATE saleDate,
+                hycd.MB_SALES_STATUS saleStatus,
+                saleSt.data_value saleStatusName,
+                hyc.auto_flag autoFlag,
+                (CASE WHEN hyc.AUTO_FLAG = 9101 THEN '平台录入' WHEN hyc.AUTO_FLAG = 9102 THEN 'MES' ELSE 'MES' END ) autoFlagName,
+                hyc.removal_time removalTime,
+                hycd.invoice_number invoiceNumber,
+                hyb.business_code businessCode,
+                hyc.REGISTER_TIME registerTime,
+                hyc.NETTING_TIME nettingTime,
+                hyc.NETTING_LOG nettingLog,
+                hyc.NETTING_LAT nettingLat,
+                hyc.OFFLINE_TIME offlineTime
+                from hy_car hyc
+                <#if accountType gt 1>
+                    INNER JOIN (SELECT CAR_TEAM_ID FROM hy_atc_mapping  WHERE ACCOUNT_ID = ${accountId} AND ATC_TYPE = 0) atc ON  atc.CAR_TEAM_ID = hyc.car_team_id
+                </#if>
+                left join hy_car_detail hycd on hyc.car_id = hycd.car_id
+                left join hy_terminal hytbd on hyc.car_terminal = hytbd.t_id
+                left join hy_terminal hytfk on hyc.car_terminal_id = hytfk.t_id
+                left join hy_team hytm on hyc.car_team_id = hytm.t_id
+                left join hy_business hyb on hycd.car_owner = hyb.cid
+                left join (select * from hy_basicdata where data_type = 2) carType on hyc.car_type = carType.data_id
+                left join (select * from hy_basicdata where data_type = 40) enType on hycd.engine_type	= enType.data_code
+                left join (select * from hy_basicdata where data_type = 39) saleSt on hycd.sales_status	= saleSt.data_code
+            where 1=1 and hyc.DEL_FLAG = 0 AND hyc.car_team_id IS NOT NULL
+            <#if chassisNum?? && chassisNum != "">
+                and  hyc.chassis_num like CONCAT(CONCAT('%','${chassisNum}'), '%') escape '!'
+            </#if>
+            <#if carOwner?? && carOwner != "">
+                and  hyb.business_name like CONCAT(CONCAT('%','${carOwner}'), '%') escape '!'
+            </#if>
+            <#if carType?? && carType != "">
+                and  hyc.car_type = '${carType}'
+            </#if>
+            <#if beginSaleDate?? && beginSaleDate != 0&&endSaleDate?? && endSaleDate != 0>
+                and hycd.MB_SALES_DATE between ${beginSaleDate} and ${endSaleDate}
+            </#if>
+            <#if carCph?? && carCph != "">
+                and  hyc.car_cph like CONCAT(CONCAT('%','${carCph}'), '%') escape '!'
+            </#if>
+            <#if teamName?? && teamName != "">
+                and  hytm.t_name like CONCAT(CONCAT('%','${teamName}'), '%') escape '!'
+            </#if>
+            <#if beginRegisterTime?? && beginRegisterTime != 0&&endRegisterTime?? && endRegisterTime != 0>
+                and hyc.REGISTER_TIME between ${beginRegisterTime} and ${endRegisterTime}
+            </#if>
+            <#if terminalFKCode?? && terminalFKCode != "">
+                and  hytfk.t_code like CONCAT(CONCAT('%','${terminalFKCode}'), '%') escape '!'
+            </#if>
+            <#if engType?? && engType != "">
+                and  hycd.engine_type = '${engType}'
+            </#if>
+            <#if beginOfflineTime?? && beginOfflineTime != 0&&endOfflineTime?? && endOfflineTime != 0>
+                and hyc.OFFLINE_TIME between ${beginOfflineTime} and ${endOfflineTime}
+            </#if>
+            <#if terminalBDCode?? && terminalBDCode != "">
+                and  hytbd.t_code like CONCAT(CONCAT('%','${terminalBDCode}'), '%') escape '!'
+            </#if>
+            order by hyc.car_id  desc
+        ]]>
+    </sql-query>
+</dynamic-hibernate-statement>

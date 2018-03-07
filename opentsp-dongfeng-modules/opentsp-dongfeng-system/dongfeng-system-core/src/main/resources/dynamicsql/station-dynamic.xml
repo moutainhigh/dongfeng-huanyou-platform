@@ -1,0 +1,361 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+<dynamic-hibernate-statement>
+    <!--查询服务站-->
+    <sql-query name="queryStationByParam">
+        <![CDATA[
+        SELECT
+          DISTINCT SS.id id,
+          SS.station_name stationName,
+          SS.name_forshort stationShortName,
+          SS.address address,
+          SS.longitude longitude,
+          SS.latitude latitude,
+          SS.radius radius,
+          SS.povince province,
+          SS.city city,
+          SS.service_manager serviceManager,
+          SS.phone mobilePhone,
+          SS.stranded_max_time strandedMaxTime,
+          SS.star_level starLever,
+          SS.picture picture,
+          SS.SERVICE_Type serviceType,
+          SS.SERVICE_CONTENT serviceContent,
+          SS.PARTS_CONTENT partsContent,
+          SS.service_radius serviceRadius,
+          SS.service_code stationCode,
+          SS.tool_content toolContent,
+          SS.creat_Date createDate,
+          SS.account_id accountId,
+          AC.ACCOUNT_NAME accountName,
+          SS.fixed_telephone  telephone,
+          SS.IS_CORE isCore,
+          SS.STATION_ENABLE switchStatus,
+          IF(SS.STATION_ENABLE = 1 OR SS.STATION_ENABLE IS NULL, '启用', '停用') AS switchStatusStr,
+          SS.SYNC_STATUS tBossSyncStatus,
+          SS.TAG_SYNC_STATUS tagSyncStatus,
+          SS.andnet andNet,
+          SS.remark remark
+        FROM hy_service_station SS
+        LEFT JOIN hy_account AC ON SS.account_id = AC.ACCOUNT_ID
+         <#if accountType?? && accountType!= 1>
+             INNER JOIN
+			(
+			    SELECT ha.*
+			    FROM hy_account_station ha
+			    LEFT JOIN hy_account hs ON hs.ACCOUNT_ID=ha.ACCOUNT_ID
+			    WHERE hs.ACCOUNT_ID = ${accountId}
+			)temp ON SS.id = temp.STATION_ID
+         </#if>
+         WHERE 1 =1 AND SS.DEL_FLAG != ${delFlag}
+         <#if switchStatus?? && switchStatus!= "" && switchStatus == "1">
+              AND SS.STATION_ENABLE  = 1
+         </#if>
+         <#if switchStatus?? && switchStatus!= ""  && switchStatus == "0">
+              AND SS.STATION_ENABLE  = 0
+         </#if>
+         <#if tBossSwitchStatus?? && tBossSwitchStatus!= ""  && tBossSwitchStatus == "0">
+              AND SS.SYNC_STATUS  not in (1,5)
+         </#if>
+         <#if tBossSwitchStatus?? && tBossSwitchStatus!= ""  && tBossSwitchStatus == "1">
+              AND SS.SYNC_STATUS  in (1,5)
+         </#if>
+         <#if tagSwitchStatus?? && tagSwitchStatus!= ""  && tagSwitchStatus == "0">
+              AND SS.TAG_SYNC_STATUS not in (1,5)
+         </#if>
+         <#if tagSwitchStatus?? && tagSwitchStatus!= ""  && tagSwitchStatus == "1">
+              AND SS.TAG_SYNC_STATUS  in (1,5)
+         </#if>
+         <#if stationName?? && stationName!= "">
+              AND SS.station_name  LIKE '%${stationName}%' escape '!'
+         </#if>
+         <#if stationCode?? &&  stationCode!= "">
+              AND SS.service_code  LIKE '%${stationCode}%' escape '!'
+         </#if>
+         <#if provinceCode?? &&  provinceCode!= "">
+              AND  (SS.povince  LIKE '%${provinceCode}%' escape '!'
+              OR   SS.city  LIKE '%${provinceCode}%' escape '!')
+         </#if>
+         <#if id?? &&  id!= "">
+              AND SS.id  = ${id}
+         </#if>
+         ORDER BY SS.id DESC
+        ]]>
+    </sql-query>
+    <!--查询子服务站-->
+    <sql-query name="querySubStation">
+        <![CDATA[
+          SELECT
+          SS.id id,
+          SS.name name,
+          SS.code code,
+          SS.longitude longitude,
+          SS.latitude latitude,
+          SS.address address,
+          SS.work_radius workRadius
+        FROM
+          hy_secdstation  SS
+          WHERE SS.station_id = ${pid}
+        ]]>
+    </sql-query>
+    <!--查询用户服务站映射关系 -->
+    <sql-query name="queryAccountStationMapping">
+        <![CDATA[
+           SELECT
+             ACCOUNT_ID
+           FROM hy_account_station
+           WHERE  STATION_ID = ${stationId}
+           <#if accountType?? && accountType!= 1>
+             and ACCOUNT_ID != ${accountId}
+            </#if>
+		]]>
+    </sql-query>
+    <!--查询用户服务站映射关系 -->
+    <sql-query name="queryVehicleBind">
+        <![CDATA[
+           SELECT
+             CAR_ID
+           FROM hy_car
+           WHERE  CREATE_STATION_ID = ${stationId}
+		]]>
+    </sql-query>
+      <!--删除用户服务站映射关系-->
+    <sql-query name="deleteAccountStationMapping">
+        <![CDATA[
+            DELETE FROM hy_account_station
+            WHERE ACCOUNT_ID = ${accountId}
+            AND STATION_ID = ${stationId}
+        ]]>
+    </sql-query>
+    <!--根据查询参数查询服务站 -->
+    <sql-query name="querySubStationIdByParam">
+        <![CDATA[
+           SELECT
+            SS.id
+           FROM hy_secdstation SS
+           WHERE SS.station_id  = ${pid}
+		]]>
+    </sql-query>
+     <!--查询服务站-->
+    <sql-query name="isStationExisted">
+        <![CDATA[
+         SELECT
+             SS.id id
+         FROM hy_service_station SS
+         WHERE 1 =1 AND SS.DEL_FLAG !=${delFlag}
+         <#if stationName?? && stationName!= "">
+              AND SS.station_name = '${stationName}'
+         </#if>
+         <#if stationCode?? &&  stationCode!= "">
+              AND SS.service_code  = '${stationCode}'
+         </#if>
+         <#if id?? &&  id!= "">
+              AND SS.id  != ${id}
+         </#if>
+        ]]>
+    </sql-query>
+    <!--查询服务站-->
+    <sql-query name="isStationDisabled">
+        <![CDATA[
+         SELECT
+             SS.id id
+         FROM hy_service_station SS
+         WHERE 1 =1 AND SS.DEL_FLAG !=${delFlag}
+         AND SS.STATION_ENABLE = ${disableFlag}
+         <#if stationName?? && stationName!= "">
+              AND SS.station_name  = '${stationName}'
+         </#if>
+         <#if stationCode?? &&  stationCode!= "">
+              AND SS.service_code  = '${stationCode}'
+         </#if>
+         <#if id?? &&  id!= "">
+              AND SS.id  != ${id}
+         </#if>
+        ]]>
+    </sql-query>
+    <sql-query name="queryAuditStation">
+        <![CDATA[
+        SELECT * FROM
+        (
+            (
+             SELECT
+                 ST1.id stationId,
+                 ASN1.AERA_TYPE stationType,
+                 ST1.station_name stationName,
+                 '' as subStationName,
+                 ST1.service_code stationCode,
+                 ST1.address oldAddress,
+                 ST1.longitude oldLongitude,
+                 ST1.latitude oldLatitude,
+                 ST1.phone mobilePhone,
+                 ST1.fixed_telephone telephone,
+                 ST1.radius,ASN1.ADDRESS newAddress,
+                 ASN1.LONG_ITUDE newLongitude,
+                 ASN1.LAT_ITUDE newLatitude,
+                 ACC.ACCOUNT_NAME accountName,
+                 ASN1.CREATE_TIME createTime,
+                 ASN1.ID auditId
+            FROM hy_service_station ST1
+            LEFT JOIN hy_audit_station ASN1 ON ST1.id = ASN1.AERA_ID
+            LEFT JOIN hy_account ACC ON ACC.ACCOUNT_ID =ASN1.ACCOUNT_ID
+            <#if accountType?? && accountType!= 1>
+            INNER JOIN
+			(
+			    SELECT ha.*
+			    FROM hy_account_station ha
+			    LEFT JOIN hy_account hs ON hs.ACCOUNT_ID=ha.ACCOUNT_ID
+			    WHERE hs.ACCOUNT_ID = ${accountId}
+			)temp ON ST1.id = temp.STATION_ID
+			 </#if>
+            WHERE ST1.DEL_FLAG != 1
+                  AND ASN1.AERA_TYPE = 1
+                  AND ASN1.AUDIT_STATUS = 0
+             <#if stationName?? &&  stationName!= "">
+                  AND ST1.station_name LIKE '%${stationName}%' escape '!'
+             </#if>
+             <#if stationCode?? &&  stationCode!= "">
+                  AND ST1.service_code LIKE '%${stationCode}%' escape '!'
+             </#if>
+            )
+        UNION ALL
+            (
+            SELECT
+                SS.id stationId,
+                ASN1.AERA_TYPE stationType,
+                S.station_name stationName,
+                SS.name subStationName,
+                SS.code stationCode,
+                SS.address oldAddress,
+                SS.longitude oldLongitude,
+                SS.latitude oldLatitude,
+                S.phone mobilePhone,
+                S.fixed_telephone telephone,
+                SS.work_radius radius,
+                ASN1.ADDRESS newAddress,
+                ASN1.LONG_ITUDE newLongitude,
+                ASN1.LAT_ITUDE newLatitude,
+                ACC.ACCOUNT_NAME accountName,
+                ASN1.CREATE_TIME createTime,
+                ASN1.ID auditId
+            FROM hy_secdstation SS
+            LEFT JOIN  hy_service_station S ON SS.station_id = S.id
+            LEFT JOIN hy_audit_station ASN1 ON SS.id = ASN1.AERA_ID
+            LEFT JOIN hy_account ACC ON ACC.ACCOUNT_ID =ASN1.ACCOUNT_ID
+            <#if accountType?? && accountType!= 1>
+            INNER JOIN
+			(
+			    SELECT ha.*
+			    FROM hy_account_station ha
+			    LEFT JOIN hy_account hs ON hs.ACCOUNT_ID=ha.ACCOUNT_ID
+			    WHERE hs.ACCOUNT_ID = ${accountId}
+			)temp ON S.id = temp.STATION_ID
+			</#if>
+            WHERE S.DEL_FLAG != 1
+                  AND ASN1.AERA_TYPE = 2
+                  AND ASN1.AUDIT_STATUS = 0
+            <#if stationName?? &&  stationName!= "">
+                   AND (S.station_name LIKE '%${stationName}%' ESCAPE '!' OR  SS.name LIKE '%${stationName}%' ESCAPE '!')
+             </#if>
+             <#if stationCode?? &&  stationCode!= "">
+                  AND ( S.service_code LIKE '%${stationCode}%' escape '!' OR SS.code  LIKE '%${stationCode}%' escape '!')
+             </#if>
+            )
+        ) ADT ORDER BY ADT.createTime DESC
+		]]>
+    </sql-query>
+    <sql-query name="updateLocationOfStation">
+        <![CDATA[
+    		UPDATE hy_service_station
+    		SET  latitude = ${latitude}, longitude = ${longitude}, address = '${address}', povince = '${povince}', city = '${city}',UPDATE_TIME =  UNIX_TIMESTAMP(NOW())
+    		WHERE DEL_FLAG != 1 AND id = ${id}
+    	]]>
+    </sql-query>
+    <sql-query name="updateLocationOfSubStation">
+        <![CDATA[
+    		UPDATE hy_secdstation
+    		SET latitude = ${latitude}, longitude = ${longitude}, address = '${address}'
+    		WHERE id = ${id}
+    	]]>
+    </sql-query>
+    <sql-query name="queryToSynStation">
+        <![CDATA[
+        select * from
+        (
+    		(select hst.service_code jf2300,hat.LONG_ITUDE jf2301,hat.LAT_ITUDE jf2302,1 jf2303,hst.radius jf2304 from hy_audit_station hat
+            left join hy_service_station hst on hat.aera_id = hst.id where 1=1 and hst.del_flag=0 and hat.aera_type =1 and hat.id in(${auditIds})
+            )
+            union all
+            (
+            select hst.code jf2300,hat.LONG_ITUDE jf2301,hat.LAT_ITUDE jf2302,1 jf2303,hst.work_radius jf2304 from hy_audit_station hat
+            left join hy_secdstation hst on hat.aera_id = hst.id where 1=1 and hat.aera_type =2 and hat.id in(${auditIds})
+            )
+        ) rt
+    	]]>
+    </sql-query>
+    <sql-query name="updateSyncStatusOfStation">
+        <![CDATA[
+    		UPDATE hy_service_station
+    		SET SYNC_STATUS = ${syncStatus},
+    		UPDATE_TIME =  UNIX_TIMESTAMP(NOW())
+    		WHERE DEL_FLAG != 1 AND id = ${id}
+    	]]>
+    </sql-query>
+    <sql-query name="updateServiceStationTime">
+        <![CDATA[
+    		UPDATE hy_service_station
+    		SET UPDATE_TIME =  UNIX_TIMESTAMP(NOW())
+    		WHERE DEL_FLAG != 1 AND id = ${id}
+    	]]>
+    </sql-query>
+    <sql-query name="updateTagSyncStatusOfStation">
+        <![CDATA[
+    		UPDATE hy_service_station
+    		SET TAG_SYNC_STATUS = ${tagSyncStatus},
+    		UPDATE_TIME =  UNIX_TIMESTAMP(NOW())
+    		WHERE DEL_FLAG != 1 AND id = ${id}
+    	]]>
+    </sql-query>
+    <sql-query name="updateTagSyncStatusOfSubStation">
+        <![CDATA[
+    		UPDATE hy_secdstation
+    		SET TAG_SYNC_STATUS = ${tagSyncStatus}
+    		WHERE id = ${id}
+    	]]>
+    </sql-query>
+    <!--查询子服务站-->
+    <sql-query name="querySubStationEntity">
+        <![CDATA[
+          SELECT
+          SS.id id,
+          SS.name name,
+          SS.code code,
+          SS.longitude longitude,
+          SS.latitude latitude,
+          SS.address address,
+          SS.work_radius workRadius,
+          SS.station_code  stationCode,
+          SS.station_id stationId,
+          SS.TAG_SYNC_STATUS tagSyncStatus
+        FROM
+          hy_secdstation  SS
+          WHERE SS.station_id = ${pid}
+        ]]>
+    </sql-query>
+</dynamic-hibernate-statement>

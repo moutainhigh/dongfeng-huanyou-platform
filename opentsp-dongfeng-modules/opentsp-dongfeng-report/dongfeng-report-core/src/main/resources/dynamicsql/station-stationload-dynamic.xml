@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+
+<dynamic-hibernate-statement>
+    <!-- 查询服务站负荷-->
+    <sql-query name="queryStationLoadInfos">
+        <![CDATA[
+            select
+                hyt.id as stationId,
+                hyt.station_name as name,
+                hyt.address as address,
+                hyt.phone as phone,
+                hyt.service_manager as manager,
+                hyt.STAR_LEVEL as serviceLevel,
+                comment.AVGSTARLEVEL as reviewsLevel,
+                hyt.STATION_ENABLE as stationEnable
+            from
+            hy_service_station hyt
+            left join (select STATION_ID,ROUND(AVG(COMMENT_TOTAL_LEVEL), 0) AVGSTARLEVEL FROM HY_COMMENT_STATION GROUP BY STATION_ID) comment on comment.STATION_ID = hyt.id
+            <#if accountId?? && accountType != 1>
+                inner join hy_account_station hyaccs ON hyaccs.ACCOUNT_ID = ${accountId}  AND hyaccs.station_id = hyt.id
+			</#if>
+            where 1 = 1 and hyt.DEL_FLAG != 1
+            <#if stationName?? && stationName != "">
+                and hyt.STATION_NAME LIKE CONCAT(CONCAT('%','${stationName}'), '%') escape '!'
+            </#if>
+            <#if stationEnable?? && stationEnable != -1>
+                and hyt.STATION_ENABLE = ${stationEnable}
+            </#if>
+            <#if province??>
+                and hyt.povince = ${province}
+            </#if>
+            <#if city??>
+                and hyt.city = ${city}
+            </#if>
+           ORDER BY name desc
+		]]>
+    </sql-query>
+</dynamic-hibernate-statement>

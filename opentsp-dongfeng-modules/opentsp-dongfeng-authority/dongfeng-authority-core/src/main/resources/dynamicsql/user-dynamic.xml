@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+<dynamic-hibernate-statement>
+
+    <sql-query name="getAttributeStation">
+        <![CDATA[
+            SELECT
+                station_enable as stationEnable
+
+            FROM hy_account_station has, hy_service_station hss
+            WHERE has.STATION_ID = hss.id and has.ACCOUNT_ID=${accountId}
+            and hss.DEL_FLAG != 1
+            GROUP BY hss.id
+            LIMIT 0,1
+
+        ]]>
+    </sql-query>
+
+
+</dynamic-hibernate-statement>

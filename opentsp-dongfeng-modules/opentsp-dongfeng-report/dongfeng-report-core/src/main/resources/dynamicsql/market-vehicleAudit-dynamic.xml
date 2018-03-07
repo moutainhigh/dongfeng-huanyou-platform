@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+
+<dynamic-hibernate-statement>
+    <!-- 查询车辆扫码信息-->
+    <sql-query name="queryVehicleAuditInfos">
+        <![CDATA[
+            select
+                record.id as id,
+                record.status as status,
+                record.classis_number as chassisNum,
+                record.trader as dealer,
+                record.proposer as operator,
+                record.create_time as operaDate,
+                record.apply_reason as applyReason
+            from product_check_result_record record
+            where 1 = 1
+            <#if chassisNum?? && chassisNum != "">
+                AND record.classis_number like '%${chassisNum}%' escape '!'
+            </#if>
+            <#if status?? && status != "" && status != '-1'>
+                AND record.status = '${status}'
+            </#if>
+            <#if startTime?? && startTime != "" && endTime?? && endTime != "">
+                AND record.create_time >= '${startTime}' and record.create_time < '${endTime}'
+            </#if>
+            order by chassisNum desc
+		]]>
+    </sql-query>
+</dynamic-hibernate-statement>

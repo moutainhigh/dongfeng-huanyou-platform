@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+
+<dynamic-hibernate-statement>
+ <!--搜索终端日志-->
+    <sql-query name="searchTerminalLogByParam">
+        <![CDATA[
+       select
+		TL.LOG_ID logId,
+		TL.LOG_NAME type,
+		TL.LOG_STATE status,
+		TL.LOG_TYPE dir,
+		TL.LOG_CONTENT des,
+		TL.LOG_DATE operateTime,
+		TL.LOG_ACCOUNT_IP operateIp,
+		TL.LOG_ACCOUNT_NAME operateUser,
+		TL.LOG_SIM simNo,
+		TL.CHASSIS_NUM chassisNum,
+		TL.CAR_OWNER reCustom,
+		TL.COMPANY_NAME team,
+		ter.t_code as terminalId,
+		C.CAR_ID carId,
+		C.CAR_CPH carNum
+		from hy_terminal_log TL
+		left join hy_terminal ter on TL.LOG_SIM = IF(ter.T_AUTO_COMMUNICATION_ID is not null and ter.T_AUTO_COMMUNICATION_ID!=0, ter.T_AUTO_COMMUNICATION_ID, ter.T_COMMUNICATION_ID)
+	     LEFT JOIN hy_car C ON C.CHASSIS_NUM = TL.CHASSIS_NUM
+	    where ter.del_flag = 0 and LOG_STATE != -10 and LOG_TYPE !=2
+		<#if terminalId?? && terminalId != "">
+		    and ter.t_code like CONCAT(CONCAT('%','${terminalId}'), '%') escape '!'
+		</#if>
+		<#if cars?? && cars != "" && cars != "ALL">
+			and TL.CHASSIS_NUM in('${cars}')
+		</#if>
+		<#if operateUser?? && operateUser != "">
+			and TL.LOG_ACCOUNT_NAME like CONCAT(CONCAT('%','${operateUser}'), '%') escape '!'
+		</#if>
+		<#if chassisNo?? && chassisNo != "">
+			and TL.CHASSIS_NUM LIKE
+			CONCAT(CONCAT('%','${chassisNo}'), '%') escape '!'
+		</#if>
+		<#if simNo?? && simNo != "">
+			and TL.LOG_SIM LIKE
+			CONCAT(CONCAT('%','${simNo}'), '%') escape '!'
+		</#if>
+		<#if commandDir?? && commandDir != "">
+			and TL.LOG_TYPE = ${commandDir}
+		</#if>
+		<#if logName?? && logName != "">
+			and TL.LOG_NAME in ('${logName}')
+		</#if>
+		<#if commandStatus?? && commandStatus != "">
+			and TL.LOG_STATE = ${commandStatus}
+		</#if>
+		<#if beginTime?? && endTime?? >
+			and TL.LOG_DATE between ${beginTime} and ${endTime}
+ 		</#if>
+		order by TL.LOG_ID desc
+		]]>
+    </sql-query>
+    <sql-query name="queryVehicleOfTransport">
+        <![CDATA[
+        SELECT GROUP_CONCAT(CHASSIS_NUM) FROM hy_car hc
+        INNER JOIN hy_car_detail detail ON hc.CAR_ID = detail.CAR_ID
+        INNER JOIN hy_account_business hab ON detail.CAR_OWNER = hab.BUSINESS_ID INNER JOIN hy_account ha ON hab.ACCOUNT_ID=ha.ACCOUNT_ID
+        WHERE hc.DEL_FLAG = 0
+        AND hc.CAR_TEAM_ID IS NOT NULL
+        AND ha.ACCOUNT_ID=${accountId}
+        ]]>
+    </sql-query>
+    <sql-query name="queryVehicleOfFinanceCompany">
+        <![CDATA[
+         SELECT GROUP_CONCAT(CHASSIS_NUM) FROM hy_car hc
+			inner join hy_account_platform_mapping hap on hc.financing_company=hap.platform_id
+			inner join hy_account ha ON hap.ACCOUNT_ID=ha.ACCOUNT_ID
+			where AND ha.ACCOUNT_ID=${accountId}
+        ]]>
+    </sql-query>
+    <sql-query name="queryVehicleOfNormal">
+        <![CDATA[
+     	select GROUP_CONCAT(CHASSIS_NUM) from hy_car hc
+			left join hy_atc_mapping htc on hc.CAR_TEAM_ID=htc.CAR_TEAM_ID
+			left join hy_account ha on htc.ACCOUNT_ID=ha.ACCOUNT_ID where 1=1
+             and ha.ACCOUNT_ID=${accountId}
+        ]]>
+    </sql-query>
+</dynamic-hibernate-statement>

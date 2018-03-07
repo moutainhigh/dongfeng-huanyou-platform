@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+
+<dynamic-hibernate-statement>
+
+    <!-- 查询用户权限下车辆-->
+    <sql-query name="queryCars">
+        <![CDATA[
+            SELECT
+                car.CAR_ID id,
+                car.CHASSIS_NUM chassisNum,
+                IFNULL(car.CAR_CPH,'') plateNum
+            FROM
+                hy_car car
+            INNER JOIN
+                hy_terminal ter
+            ON
+                ter.T_ID = IF ( CAR_TERMINAL_ID IS NOT NULL AND CAR_TERMINAL_ID > 0, CAR_TERMINAL_ID, CAR_TERMINAL )
+                <#if accountType gt 1>
+                    INNER JOIN
+                        (SELECT CAR_TEAM_ID FROM hy_atc_mapping  WHERE ACCOUNT_ID = ${accountId} AND ATC_TYPE = 0) atc ON  atc.CAR_TEAM_ID = car.CAR_TEAM_ID
+                </#if>
+            WHERE
+                car.DEL_FLAG = 0
+                <#if chassisNum?? && chassisNum != "">
+                    AND car.CHASSIS_NUM LIKE '%${chassisNum}%' escape '!'
+                </#if>
+                <#if searchText?? && searchText != "">
+                    AND (car.CHASSIS_NUM LIKE '%${searchText}%' escape '!'  OR car.CAR_CPH LIKE '%${searchText}%' escape '!'  OR ter.T_SIM LIKE '%${searchText}%' escape '!'  OR ter.T_CODE LIKE '%${searchText}%' escape '!' )
+                </#if>
+                order by car.CAR_ID desc
+		]]>
+    </sql-query>
+
+
+</dynamic-hibernate-statement>

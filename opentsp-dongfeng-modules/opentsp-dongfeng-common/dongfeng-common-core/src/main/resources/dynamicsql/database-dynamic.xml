@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+<dynamic-hibernate-statement>
+    <!--yaocy 查询数据字典-->
+    <sql-query name="queryBasicDataList">
+        <![CDATA[
+            SELECT
+                IFNULL(t.DATA_ID, 0) as id,
+                t.DATA_CODE as code,
+                t.DATA_VALUE as value
+            FROM hy_basicdata t
+            WHERE t.DATA_TYPE = ${type}
+            <#if type?? && type==55>
+		        and t.DATA_VALUE not in('金融公司')
+	        </#if>
+        ]]>
+    </sql-query>
+    
+    <sql-query name="queryBasicDataListWithCode">
+    
+        <![CDATA[
+            SELECT
+                IFNULL(t.DATA_ID, 0) as id,
+                t.DATA_CODE as code,
+                t.DATA_VALUE as value
+            FROM hy_basicdata t
+            WHERE t.DATA_TYPE = ${type} and t.DATA_CODE = ${dataCode}
+            <#if type?? && type==55>
+		        and t.DATA_VALUE not in('金融公司')
+	        </#if>
+        ]]>
+    </sql-query>
+    
+    
+    
+    <sql-query name="getBasicData">
+        <![CDATA[
+            SELECT
+                IFNULL(t.DATA_ID, 0) as id,
+                t.DATA_CODE as code,
+                t.DATA_VALUE as value
+            FROM hy_basicdata t
+            WHERE t.DATA_CODE = '${code}' AND t.DATA_TYPE = ${type}
+        ]]>
+    </sql-query>
+</dynamic-hibernate-statement>

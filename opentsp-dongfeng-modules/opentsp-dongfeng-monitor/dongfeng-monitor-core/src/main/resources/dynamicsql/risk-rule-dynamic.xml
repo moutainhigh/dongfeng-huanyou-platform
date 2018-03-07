@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+
+<dynamic-hibernate-statement>
+    <!-- 查询风控规则信息-->
+    <sql-query name="queryRiskRuleById">
+        <![CDATA[
+         SELECT
+            RISK.ID ruleId,
+            RISK.REGION_ID regionId,
+            RISK.RISK_TYPE type,
+            RISK.RISK_VALUE value,
+            RISK.OPERATE_TIME operateTime,
+            RISK.OPERATE_USER operateUser,
+            RISK.RISK_COMMON mark,
+            RISK.VEHICLE_ID vehicleId,
+            CAR.CHASSIS_NUM chassisNum,
+            CAR.CAR_CPH carNum
+            FROM hy_risk RISK left join hy_car CAR ON RISK.VEHICLE_ID = CAR.CAR_ID
+            WHERE RISK.ID = ${id}
+		]]>
+    </sql-query>
+     <!-- 查询风控区中的车辆防控规则信息-->
+        <sql-query name="queryRiskRuleOfRegion">
+            <![CDATA[
+    	     SELECT
+                RISK.ID ruleId,
+                RISK.REGION_ID regionId,
+                RISK.RISK_TYPE type,
+                RISK.RISK_VALUE value,
+                RISK.OPERATE_TIME operateTime,
+                RISK.OPERATE_USER operateUser,
+                RISK.RISK_COMMON mark,
+                RISK.VEHICLE_ID vehicleId,
+                CAR.CHASSIS_NUM chassisNum,
+                CAR.CAR_CPH carNum,
+                BUS.business_name carOwner
+                FROM hy_risk RISK LEFT JOIN hy_car CAR ON RISK.VEHICLE_ID = CAR.CAR_ID
+                LEFT JOIN hy_car_detail CD ON CD.CAR_ID = CAR.CAR_ID
+                LEFT JOIN hy_business BUS ON BUS.cid = CD.CAR_OWNER
+                <#if accountType = 4>
+                    INNER JOIN (SELECT BUSINESS_ID FROM hy_account_business WHERE ACCOUNT_ID = ${accountId})  hab ON CD.CAR_OWNER = hab.BUSINESS_ID
+                  <#elseif accountType gt 1>
+                            INNER JOIN
+                                (SELECT CAR_TEAM_ID FROM hy_atc_mapping  WHERE ACCOUNT_ID = ${accountId} AND ATC_TYPE = 0) atc ON  atc.CAR_TEAM_ID = CAR.CAR_TEAM_ID
+                  </#if>
+             WHERE RISK.REGION_ID = ${id}
+              <#if vehicleId?? && vehicleId != "">
+                and RISK.VEHICLE_ID = ${vehicleId}
+            </#if>
+    		]]>
+        </sql-query>
+</dynamic-hibernate-statement>

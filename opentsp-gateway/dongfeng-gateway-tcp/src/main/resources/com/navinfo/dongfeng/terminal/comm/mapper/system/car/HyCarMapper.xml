@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.navinfo.dongfeng.terminal.comm.mapper.system.car.HyCarMapper">
+
+    <resultMap id="carResultMap" type="com.navinfo.dongfeng.terminal.comm.model.system.vehicle.HyCar">
+        <id column="CAR_ID" property="carId" jdbcType="BIGINT"/>
+    </resultMap>
+
+    <select id="selectCarByComId" resultMap="carResultMap" parameterType="java.util.Map">
+          SELECT * FROM
+          (
+              SELECT
+              car.car_id,
+              IFNULL ( ter.T_AUTO_COMMUNICATION_ID, ter.T_COMMUNICATION_ID ) AS commId
+              FROM
+                  hy_car car
+              INNER JOIN hy_terminal ter ON ter.T_ID =
+              IF (
+                  CAR_TERMINAL_ID IS NOT NULL
+                  AND CAR_TERMINAL_ID > 0,
+                  CAR_TERMINAL_ID,
+                  CAR_TERMINAL
+              )
+              INNER JOIN hy_car_detail detail ON car.CAR_ID = detail.CAR_ID
+              WHERE car.DEL_FLAG = 0
+          ) result
+          where result.commId = #{ commId,jdbcType=BIGINT}
+    </select>
+    <update id="updateCarByPrimaryKey" parameterType="java.util.Map">
+        update hy_car
+        <set>
+            REGISTER_TIME = #{regTime,jdbcType=BIGINT}
+        </set>
+        where car_id = #{carId,jdbcType=BIGINT}
+    </update>
+</mapper>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+<dynamic-hibernate-statement>
+    <sql-query name="commonQueryUserByName">
+        <![CDATA[
+            SELECT
+                t1.ACCOUNT_ID AS accountId,
+                t1.ACCOUNT_NAME AS accountName,
+                t1.ACCOUNT_DATE AS accountDate,
+                t1.ACCOUNT_LINKTEL AS accountLinktel,
+                t1.ACCOUNT_TYPE AS accountType,
+                t2.ACCOUNT_NAME AS createAccount,
+                t1.LOCK_ACCOUNT AS lockAccount,
+                t1.TERM_VILIDATE AS termVilidate
+            FROM hy_account t1
+            WHERE t1.DEL_FLAG != 1
+             AND t1.ACCOUNT_NAME = '${accountName}'
+        ]]>
+    </sql-query>
+
+
+
+
+</dynamic-hibernate-statement>

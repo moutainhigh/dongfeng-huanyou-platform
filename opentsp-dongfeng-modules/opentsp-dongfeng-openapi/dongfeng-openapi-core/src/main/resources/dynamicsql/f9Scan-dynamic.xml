@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+<dynamic-hibernate-statement>
+    <!--查询二级服务站信息-->
+    <sql-query name="queryScanInfo">
+        <![CDATA[
+           select
+            	(CASE WHEN hytbd.T_SIM is null THEN hytfk.T_SIM ELSE hytbd.T_SIM END) terSim,
+                (CASE WHEN hytbd.t_code is null THEN hytfk.t_code ELSE hytbd.t_code END) terCode,
+                carType.data_value as terType,
+                detail.ENGINE_TYPE as engineType,
+                IFNULL(ter.t_auto_communication_id,ter.t_communication_id) as commId
+                from hy_car hyc
+               	inner join hy_terminal ter on ter.T_ID = if (car_terminal_id is not null and car_terminal_id > 0, car_terminal_id,car_terminal)
+               	left join hy_car_detail detail on hyc.CAR_ID = detail.CAR_ID
+                left join hy_terminal hytbd on hyc.car_terminal = hytbd.t_id
+                left join hy_terminal hytfk on hyc.car_terminal_id = hytfk.t_id
+                left join (select * from hy_basicdata where data_type = 54) carType on (hytbd.t_style = carType.data_code or hytfk.t_style = carType.data_code)
+            where 1=1 and hyc.DEL_FLAG = 0 AND hyc.car_team_id IS NOT NULL
+              	and (hyc.chassis_num = '${chassic}' or hyc.CHASSIS_NUM_OLD = '${chassic}')
+		]]>
+    </sql-query>
+    
+    <sql-query name="queryHyBasicByDataType">
+        <![CDATA[
+		select
+			b.data_id as dataId,
+			b.data_code as dataCode,
+			b.data_value as dataValue,
+			b.data_type as dataType
+		from
+			hy_basicdata b
+		where
+			1 = 1 
+		 <#if dataType??>
+	  	   and b.data_type = ${dataType}
+	  	 </#if>
+		 ]]>
+    </sql-query>
+   
+</dynamic-hibernate-statement>

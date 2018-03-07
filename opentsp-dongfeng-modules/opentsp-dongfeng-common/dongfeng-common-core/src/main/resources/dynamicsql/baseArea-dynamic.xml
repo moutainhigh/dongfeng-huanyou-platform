@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+<dynamic-hibernate-statement>
+    <sql-query name="queryAreaByParentCode">
+        <![CDATA[
+            SELECT
+                id as govCode,
+                name as govName,
+                parent_id as govParCode
+            FROM base_area
+            <#if pCode?? && pCode == "0">
+            WHERE parent_id  = '' or parent_id is null
+            </#if>
+            <#if pCode?? && pCode != "0">
+            WHERE parent_id = ${pCode}
+            </#if>
+        ]]>
+    </sql-query>
+    <sql-query name="queryAreaInfoByAreaCode">
+        <![CDATA[
+            SELECT
+                id as govCode,
+                name as govName,
+                parent_id as govParCode
+            FROM base_area
+            WHERE 1=1
+            <#if codes != "">
+				and id in (${codes})
+		    </#if>
+        ]]>
+    </sql-query>
+</dynamic-hibernate-statement>

@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+
+<dynamic-hibernate-statement>
+    <sql-query name="queryLastLocationVehicles">
+        <![CDATA[
+            SELECT
+			car.CAR_ID carId,
+			car.CAR_CPH plateNum,
+			car.CHASSIS_NUM chassisNum,
+			car.STRUCTURE_NUM vinNum,
+			record.create_time outDate,
+			IFNULL(ter.T_AUTO_COMMUNICATION_ID, ter.T_COMMUNICATION_ID) AS commId,
+			team.dealer_code dealerCode,
+			team.T_NAME dealerName
+            FROM
+                hy_car car
+            LEFT JOIN hy_terminal ter ON ter.T_ID =
+            IF (
+                CAR_TERMINAL_ID IS NOT NULL
+                AND CAR_TERMINAL_ID > 0,
+                CAR_TERMINAL_ID,
+                CAR_TERMINAL
+            )
+            LEFT JOIN hy_team team ON car.CAR_TEAM_ID = team.T_ID
+            LEFT JOIN product_operate_record record on record.vin_code = car.STRUCTURE_NUM AND record.curr_process = '0008'
+            WHERE
+                car.del_flag = 0 AND car.CAR_TEAM_ID IS NOT NULL
+            <#if vins?? && vins?size gt 0 >
+               and car.STRUCTURE_NUM in
+               (
+               <#list vins as id>
+                    <#if vins?size == id_index +1>
+                        '${id}'
+                    <#else>
+                        '${id}',
+                    </#if>
+               </#list>
+               )
+            </#if>
+            <#if dealer?? && dealer != "">
+                AND team.T_NAME LIKE '%${dealer}%' escape '!'
+            </#if>
+            <#if beginOutDate?? && beginOutDate != "" && endOutDate?? && endOutDate != "">
+                AND record.create_time >= '${beginOutDate}' and record.create_time < '${endOutDate}'
+            </#if>
+		]]>
+    </sql-query>
+
+    <sql-query name="queryErrorVehicles">
+        <![CDATA[
+            SELECT
+			car.CAR_ID carId,
+			car.CAR_CPH plateNum,
+			car.CHASSIS_NUM chassisNum,
+			car.STRUCTURE_NUM vinNum,
+			record.create_time outDate,
+			IFNULL(ter.T_AUTO_COMMUNICATION_ID, ter.T_COMMUNICATION_ID) AS commId,
+			team.dealer_code dealerCode,
+			team.T_NAME dealerName
+            FROM
+                hy_car car
+            LEFT JOIN hy_terminal ter ON ter.T_ID =
+            IF (
+                CAR_TERMINAL_ID IS NOT NULL
+                AND CAR_TERMINAL_ID > 0,
+                CAR_TERMINAL_ID,
+                CAR_TERMINAL
+            )
+            LEFT JOIN hy_team team ON car.CAR_TEAM_ID = team.T_ID
+            LEFT JOIN product_operate_record record on record.vin_code = car.STRUCTURE_NUM AND record.curr_process = '0008'
+            WHERE
+                car.del_flag = 0 AND car.CAR_TEAM_ID IS NOT NULL
+            <#if vins?? && vins?size gt 0 >
+               and car.STRUCTURE_NUM in
+               (
+               <#list vins as id>
+                    <#if vins?size == id_index +1>
+                        '${id}'
+                    <#else>
+                        '${id}',
+                    </#if>
+               </#list>
+               )
+            </#if>
+		]]>
+    </sql-query>
+</dynamic-hibernate-statement>

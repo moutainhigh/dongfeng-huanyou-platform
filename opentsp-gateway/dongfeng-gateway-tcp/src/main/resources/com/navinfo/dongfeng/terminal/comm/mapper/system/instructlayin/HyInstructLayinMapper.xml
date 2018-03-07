@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.navinfo.dongfeng.terminal.comm.mapper.system.instructlayin.HyInstructLayinMapper" >
+  <resultMap id="BaseResultMap" type="com.navinfo.dongfeng.terminal.comm.model.system.instructlayin.HyInstructLayin" >
+    <id column="id" property="id" jdbcType="BIGINT" />
+    <result column="id" property="id" jdbcType="VARCHAR" />
+    <result column="terminal_id" property="terminalId" jdbcType="VARCHAR" />
+    <result column="car_id" property="carId" jdbcType="VARCHAR" />
+    <result column="people_id" property="peopleId" jdbcType="VARCHAR" />
+    <result column="log_account_name" property="logAccountName" jdbcType="VARCHAR" />
+    <result column="terminal_num" property="terminalNum" jdbcType="VARCHAR" />
+    <result column="instruct_num" property="instructNum" jdbcType="VARCHAR" />
+    <result column="instruct_content" property="instructContent" jdbcType="VARCHAR" />
+    <result column="instruct_date" property="instructDate" jdbcType="VARCHAR" />
+    <result column="instruct_state" property="instructState" jdbcType="VARCHAR" />
+    <result column="recive_date" property="reciveDate" jdbcType="VARCHAR" />
+    <result column="instruct_serialnumber" property="instructSerialnumber" jdbcType="VARCHAR" />
+    <result column="session_id" property="sessionId" jdbcType="VARCHAR" />
+    <result column="issuccess_orfalse" property="issuccessOrfalse" jdbcType="INTEGER"/>
+  </resultMap>
+  
+ <sql id="Base_Column_List" >
+     	id,
+     	terminal_id,
+     	car_id,
+     	people_id,
+     	log_account_name,
+     	terminal_num,
+     	instruct_num,
+     	instruct_content,
+     	instruct_date,
+     	instruct_state,
+     	recive_date,
+     	instruct_serialnumber,
+     	session_id,
+     	issuccess_orfalse
+  </sql>
+  
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Long" >
+    select
+		<include refid="Base_Column_List" />
+    from hy_instruct_layin 
+    where  Id = #{ Id,jdbcType=BIGINT}
+  </select>
+  
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long" >
+    delete from hy_instruct_layin 
+    where Id =  #{ Id,jdbcType=BIGINT}
+  </delete>
+  
+  <delete id="deleteBatchByPrimaryKey" parameterType="java.util.List" >
+    delete from hy_instruct_layin
+    where Id in
+    <foreach collection="list" item="Id" index="index"
+            open="(" close=")" separator=",">
+             #{ Id,jdbcType=BIGINT}
+    </foreach>
+  </delete>
+  
+  
+	<insert id="insertSelective" parameterType="com.navinfo.dongfeng.terminal.comm.model.system.instructlayin.HyInstructLayin">
+		insert into hy_instruct_layin
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="id != null">
+				id,
+			</if>
+			<if test="terminalId != null">
+				terminal_id,
+			</if>
+			<if test="carId != null">
+				car_id,
+			</if>
+			<if test="peopleId != null">
+				people_id,
+			</if>
+			<if test="logAccountName != null">
+				log_account_name,
+			</if>
+			<if test="terminalNum != null">
+				terminal_num,
+			</if>
+			<if test="instructNum != null">
+				instruct_num,
+			</if>
+			<if test="instructContent != null">
+				instruct_content,
+			</if>
+			<if test="instructDate != null">
+				instruct_date,
+			</if>
+			<if test="instructState != null">
+				instruct_state,
+			</if>
+			<if test="reciveDate != null">
+				recive_date,
+			</if>
+			<if test="instructSerialnumber != null">
+				instruct_serialnumber,
+			</if>
+			<if test="sessionId != null">
+				session_id,
+			</if>
+			<if test="issuccessOrfalse != null">
+				issuccess_orfalse,
+			</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="id != null">
+				 #{ id,jdbcType= VARCHAR },
+			</if>
+			<if test="terminalId != null">
+				 #{ terminalId,jdbcType= VARCHAR },
+			</if>
+			<if test="carId != null">
+				 #{ carId,jdbcType= VARCHAR },
+			</if>
+			<if test="peopleId != null">
+				 #{ peopleId,jdbcType= VARCHAR },
+			</if>
+			<if test="logAccountName != null">
+				 #{ logAccountName,jdbcType= VARCHAR },
+			</if>
+			<if test="terminalNum != null">
+				 #{ terminalNum,jdbcType= VARCHAR },
+			</if>
+			<if test="instructNum != null">
+				 #{ instructNum,jdbcType= VARCHAR },
+			</if>
+			<if test="instructContent != null">
+				 #{ instructContent,jdbcType= VARCHAR },
+			</if>
+			<if test="instructDate != null">
+				 #{ instructDate,jdbcType= VARCHAR },
+			</if>
+			<if test="instructState != null">
+				 #{ instructState,jdbcType= VARCHAR },
+			</if>
+			<if test="reciveDate != null">
+				 #{ reciveDate,jdbcType= VARCHAR },
+			</if>
+			<if test="instructSerialnumber != null">
+				 #{ instructSerialnumber,jdbcType= VARCHAR },
+			</if>
+			<if test="sessionId != null">
+				 #{ sessionId,jdbcType= VARCHAR },
+			</if>
+			<if test="issuccessOrfalse != null">
+				 #{ issuccessOrfalse,jdbcType=INTEGER },
+			</if>
+		</trim>
+		<selectKey resultType="java.lang.Long" order="AFTER"
+			keyProperty="id">
+			SELECT LAST_INSERT_ID() AS id
+		</selectKey>
+	</insert>
+   
+   <select id="selectByPropertyByPage" resultMap="BaseResultMap"
+		parameterType="Map">
+		select
+		<include refid="Base_Column_List" />
+		from hy_instruct_layin
+		where 1=1
+		  <if test="id != null">
+			AND id =  #{ id,jdbcType= VARCHAR }
+		  </if>
+		  <if test="terminalId != null">
+			AND terminal_id =  #{ terminalId,jdbcType= VARCHAR }
+		  </if>
+		  <if test="carId != null">
+			AND car_id =  #{ carId,jdbcType= VARCHAR }
+		  </if>
+		  <if test="peopleId != null">
+			AND people_id =  #{ peopleId,jdbcType= VARCHAR }
+		  </if>
+		  <if test="logAccountName != null">
+			AND log_account_name =  #{ logAccountName,jdbcType= VARCHAR }
+		  </if>
+		  <if test="terminalNum != null">
+			AND terminal_num =  #{ terminalNum,jdbcType= VARCHAR }
+		  </if>
+		  <if test="instructNum != null">
+			AND instruct_num =  #{ instructNum,jdbcType= VARCHAR }
+		  </if>
+		  <if test="instructContent != null">
+			AND instruct_content =  #{ instructContent,jdbcType= VARCHAR }
+		  </if>
+		  <if test="instructDate != null">
+			AND instruct_date =  #{ instructDate,jdbcType= VARCHAR }
+		  </if>
+		  <if test="instructState != null">
+			AND instruct_state =  #{ instructState,jdbcType= VARCHAR }
+		  </if>
+		  <if test="reciveDate != null">
+			AND recive_date =  #{ reciveDate,jdbcType= VARCHAR }
+		  </if>
+		  <if test="instructSerialnumber != null">
+			AND instruct_serialnumber =  #{ instructSerialnumber,jdbcType= VARCHAR }
+		  </if>
+		  <if test="sessionId != null">
+			AND session_id = #{ sessionId,jdbcType= VARCHAR }
+		  </if>
+		  <if test="issuccessOrfalse != null">
+			AND issuccess_orfalse =0
+		  </if>
+		ORDER BY Id desc
+		<if test="startindex!=null and maxindex!=null">
+		 	limit #{startindex},#{maxindex} 
+		</if>
+	</select>
+	
+	 <select id="selectCountByProperty"  resultType="java.lang.Integer"
+		parameterType="com.navinfo.dongfeng.terminal.comm.model.system.instructlayin.HyInstructLayin">
+		select
+		count(1)
+		from hy_instruct_layin
+		where 1=1
+		  <if test="id != null">
+			AND id =  #{ id,jdbcType= VARCHAR }
+		  </if>
+		  <if test="terminalId != null">
+			AND terminal_id =  #{ terminalId,jdbcType= VARCHAR }
+		  </if>
+		  <if test="carId != null">
+			AND car_id =  #{ carId,jdbcType= VARCHAR }
+		  </if>
+		  <if test="peopleId != null">
+			AND people_id =  #{ peopleId,jdbcType= VARCHAR }
+		  </if>
+		  <if test="logAccountName != null">
+			AND log_account_name =  #{ logAccountName,jdbcType= VARCHAR }
+		  </if>
+		  <if test="terminalNum != null">
+			AND terminal_num =  #{ terminalNum,jdbcType= VARCHAR }
+		  </if>
+		  <if test="instructNum != null">
+			AND instruct_num =  #{ instructNum,jdbcType= VARCHAR }
+		  </if>
+		  <if test="instructContent != null">
+			AND instruct_content =  #{ instructContent,jdbcType= VARCHAR }
+		  </if>
+		  <if test="instructDate != null">
+			AND instruct_date =  #{ instructDate,jdbcType= VARCHAR }
+		  </if>
+		  <if test="instructState != null">
+			AND instruct_state =  #{ instructState,jdbcType= VARCHAR }
+		  </if>
+		  <if test="reciveDate != null">
+			AND recive_date =  #{ reciveDate,jdbcType= VARCHAR }
+		  </if>
+		  <if test="instructSerialnumber != null">
+			AND instruct_serialnumber =  #{ instructSerialnumber,jdbcType= VARCHAR }
+		  </if>
+	</select>
+	
+	<update id="updateByPrimaryKeySelective" parameterType="com.navinfo.dongfeng.terminal.comm.model.system.instructlayin.HyInstructLayin">
+			update hy_instruct_layin
+			<set>
+			<if test="id != null">
+     			id =  #{ id,jdbcType= VARCHAR },
+     		</if>
+     		<if test="terminalId != null">
+     			 terminal_id =  #{ terminalId,jdbcType= VARCHAR },
+     		</if>
+     		 <if test="carId != null">
+     			 car_id =  #{ carId,jdbcType= VARCHAR },
+     		</if>
+     		<if test="peopleId != null">
+     			 people_id =  #{ peopleId,jdbcType= VARCHAR },
+     		 </if>
+     		 <if test="logAccountName != null">
+     			 log_account_name =  #{ logAccountName,jdbcType= VARCHAR },
+     		 </if>
+     		 <if test="terminalNum != null">
+     			 terminal_num =  #{ terminalNum,jdbcType= VARCHAR },
+     		 </if>
+     		 <if test="instructNum != null">
+     			 instruct_num =  #{ instructNum,jdbcType= VARCHAR },
+     		 </if>
+     		 <if test="instructContent != null">
+     			 instruct_content =  #{ instructContent,jdbcType= VARCHAR },
+     		 </if>
+     		 <if test="instructDate != null">
+     			 instruct_date =  #{ instructDate,jdbcType= VARCHAR },
+     		 </if>
+     		 <if test="instructState != null">
+     			 instruct_state =  #{ instructState,jdbcType= VARCHAR },
+     		 </if>
+     		 <if test="reciveDate != null">
+     			 recive_date =  #{ reciveDate,jdbcType= VARCHAR },
+     		 </if>
+     		  <if test="instructSerialnumber != null">
+     			 instruct_serialnumber =  #{ instructSerialnumber,jdbcType= VARCHAR },
+     		  </if>
+     		  <if test="issuccessOrfalse != null">
+				 issuccess_orfalse = #{ issuccessOrfalse,jdbcType=INTEGER }
+				</if>
+			</set>
+			where 1=1
+				<if test="instructSerialnumber != null">
+				AND instruct_serialnumber =  #{ instructSerialnumber,jdbcType=VARCHAR}
+				</if>
+			 	<if test="sessionId != null">
+				AND session_id = #{ sessionId,jdbcType= VARCHAR }
+				</if>
+				<if test="issuccessOrfalse != null">
+				AND issuccess_orfalse =0
+			  	</if>
+	</update>
+  
+</mapper>

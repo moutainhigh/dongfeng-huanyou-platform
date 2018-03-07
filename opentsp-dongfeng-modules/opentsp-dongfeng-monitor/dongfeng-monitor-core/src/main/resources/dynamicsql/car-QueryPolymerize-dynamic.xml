@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+
+<dynamic-hibernate-statement>
+
+    <!-- 查询底盘号获取车辆-->
+    <sql-query name="selectCarsBychassisNums">
+        <![CDATA[
+				SELECT
+                    car.CAR_ID id,
+                    car.CHASSIS_NUM chassisNum,
+                    IFNULL(car.CAR_CPH,'') plateNum,
+                    IFNULL(ter.T_AUTO_COMMUNICATION_ID, ter.T_SIM ) AS commId
+                FROM
+                    hy_car car
+                INNER JOIN
+                    hy_terminal ter
+                ON
+                    ter.T_ID = IF ( CAR_TERMINAL_ID IS NOT NULL AND CAR_TERMINAL_ID > 0, CAR_TERMINAL_ID, CAR_TERMINAL )
+
+                WHERE
+                    car.DEL_FLAG = 0
+
+                AND FIND_IN_SET(car.CHASSIS_NUM,'${chassisNums}') > 0
+		]]>
+    </sql-query>
+
+
+</dynamic-hibernate-statement>

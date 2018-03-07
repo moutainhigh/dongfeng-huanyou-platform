@@ -1,0 +1,1 @@
+ALTER TABLE hy_terminal_model MODIFY TM_COMMU_MODEL varchar(150) COMMENT '通信模式';

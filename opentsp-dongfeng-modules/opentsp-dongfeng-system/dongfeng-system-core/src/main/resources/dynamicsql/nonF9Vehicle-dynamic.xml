@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+<dynamic-hibernate-statement>
+    <!--查询非F9车辆-->
+    <sql-query name="queryNonF9VehilceByParam">
+        <![CDATA[
+        SELECT
+          CM.ID vehicleId,
+          CM.CHASSIS_NUM chassisNum,
+          CM.VEHICLE_VIN vin,
+          CM.VEHICLE_CODE carModelCode,
+          CM.ENGINE_NUM engineCode,
+          CM.CAR_TYPE carTypeStr,
+          CM.ENGINE_TYPE engineTypeStr,
+          CM.ENGINE_POWER enginePower,
+          CM.CAR_MODEL_ANNOUNCEMENT carModelAnnouncement,
+          CM.BUSINESS_ID businessId,
+          BS.business_name businessName,
+          BS.business_code businessCode,
+          IFNULL(date_format(CM.MANUFACTURE_DATE, '%Y-%m-%d'),'') as manufactureDate,
+          IFNULL(date_format(CM.SALE_DATE, '%Y-%m-%d'),'') as aakSaleDate,
+          CM.INVOICE_NUMBER  invoiceNumber
+        FROM hy_car_mesdata CM
+        LEFT JOIN hy_business BS ON  CM.BUSINESS_ID = BS.cid
+		WHERE 1 = 1 AND DEL_FLAG = 0
+         <#if chassisNum?? && chassisNum!= "">
+              AND CM.CHASSIS_NUM  LIKE '%${chassisNum}%' escape '!'
+         </#if>
+         <#if carType?? && carType!= "">
+              AND CM.CAR_TYPE  LIKE '%${carType}%' escape '!'
+         </#if>
+         <#if engineType?? && engineType!= "">
+              AND CM.ENGINE_TYPE  LIKE '%${engineType}%' escape '!'
+         </#if>
+         <#if engineCode?? && engineCode!= "">
+              AND CM.ENGINE_NUM  LIKE '%${engineCode}%' escape '!'
+         </#if>
+         <#if manufactureDateStart?? && manufactureDateStart!= "" && manufactureDateEnd?? && manufactureDateEnd!= "">
+              AND  CM.MANUFACTURE_DATE BETWEEN '${manufactureDateStart}' AND '${manufactureDateEnd}'
+         </#if>
+          <#if vehicleId?? && vehicleId != "">
+              AND  CM.ID = ${vehicleId}
+         </#if>
+         ORDER BY CM.SALE_DATE DESC
+        ]]>
+    </sql-query>
+
+    <sql-query name="updateNonF9Vehicle">
+        <![CDATA[
+    		UPDATE hy_car_mesdata
+    		SET
+    		 <#if chassisNum?? && chassisNum != "">
+    		     CHASSIS_NUM = '${chassisNum}',
+    		 </#if>
+    		 <#if vin?? && vin != "">
+    		     VEHICLE_VIN = '${vin}',
+    		 </#if>
+    		 <#if carModelCode?? && carModelCode != "">
+    		     VEHICLE_CODE = '${carModelCode}',
+    		 </#if>
+    		 <#if engineCode?? && engineCode != "">
+    		     ENGINE_NUM = '${engineCode}',
+    		  <#else>
+    		      ENGINE_NUM = NULL,
+    		  </#if>
+    		  <#if carType?? && carType != "">
+    		      CAR_TYPE = '${carType}',
+    		  </#if>
+    		  <#if engineType?? && engineType != "">
+    		      ENGINE_TYPE = '${engineType}',
+    		  <#else>
+    		      ENGINE_TYPE = NULL,
+    		 </#if>
+    		  <#if enginePower?? && enginePower != "">
+    		      ENGINE_POWER =   '${enginePower}',
+    		  <#else>
+    		      ENGINE_POWER = NULL,
+    		  </#if>
+    		  <#if carModelAnnouncement?? && carModelAnnouncement != "">
+    		      CAR_MODEL_ANNOUNCEMENT = '${carModelAnnouncement}',
+    		  <#else>
+    		      CAR_MODEL_ANNOUNCEMENT = NULL,
+    		  </#if>
+    		  <#if businessId?? && businessId != "">
+    		      BUSINESS_ID =  ${businessId},
+    		  </#if>
+    		  <#if manufactureDate?? && manufactureDate != "">
+    		      MANUFACTURE_DATE =  str_to_date('${manufactureDate}', '%Y-%m-%d'),
+    		  <#else>
+    		      MANUFACTURE_DATE = NULL,
+    		 </#if>
+    		 <#if aakSaleDate?? && aakSaleDate != "">
+    		      SALE_DATE =  str_to_date('${aakSaleDate}', '%Y-%m-%d'),
+    		 </#if>
+    		 <#if invoiceNumber?? && invoiceNumber != "">
+    		      INVOICE_NUMBER = '${invoiceNumber}'
+    		 <#else>
+    		      INVOICE_NUMBER = NULL
+    		 </#if>
+    		WHERE ID = ${vehicleId}
+    	]]>
+    </sql-query>
+    <sql-query name="updateNonF9VehicleDelStatus">
+        <![CDATA[
+            UPDATE hy_car_mesdata
+    		SET DEL_FLAG = 1
+    		WHERE DEL_FLAG != 1
+    		      AND VEHICLE_VIN = '${vin}'
+        ]]>
+    </sql-query>
+    <sql-query name="queryNonF9VehicleCountByWhere">
+        <![CDATA[
+            SELECT COUNT(*) as counts FROM hy_car_mesdata WHERE DEL_FLAG = 0 and id != ${carId}
+			<#if chassisNum?? && chassisNum != "">
+    		    AND CHASSIS_NUM =  '${chassisNum}'
+    		</#if>
+    		<#if vin?? && vin != "">
+    		    AND VEHICLE_VIN =  '${vin}'
+    		</#if>
+        ]]>
+    </sql-query>
+</dynamic-hibernate-statement>

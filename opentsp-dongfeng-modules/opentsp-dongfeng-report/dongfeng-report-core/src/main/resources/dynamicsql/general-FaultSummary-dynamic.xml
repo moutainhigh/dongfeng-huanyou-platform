@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+   
+
+<dynamic-hibernate-statement>
+	<!-- 查询故障汇总-->
+	<sql-query name="queryFaultSummary">
+		<![CDATA[
+		select 
+		   team_car.CAR_ID as id,
+		   team_car.CAR_CPH as plateNum,
+		   team_car.CHASSIS_NUM as chassisNum,
+		   bdter.T_CODE as bdTerCode,
+	       fkter.T_CODE as fkTerCode,
+	       basic.DATA_VALUE as carModel,
+	       team_car.ENGINE_TYPE as eType,
+		   bd.DATA_VALUE as engineType,
+		   business.business_name as businessName,
+		   team_car.T_NAME as tName,
+		   team_car.ENGINE_TYPE_REAR as engineNumber,
+		   team_car.STRUCTURE_NUM as structureNum,
+		   IFNULL(ter.t_auto_communication_id,ter.t_communication_id) as commId
+		   from 
+		   (
+			select
+				car.CAR_ID,
+		        car.CHASSIS_NUM,
+		        car.CAR_CPH,
+		        car.CAR_TYPE,
+		   		car.STRUCTURE_NUM,
+		   		detail.CAR_OWNER,
+		        detail.ENGINE_TYPE_REAR,
+		        detail.ENGINE_TYPE,
+		        car.CAR_TERMINAL,
+		        car.CAR_TERMINAL_ID,
+		        car.del_flag,
+		        team.T_NAME
+		    FROM
+		        hy_car car,hy_car_detail detail,
+				(
+				select
+					ht.T_ID,
+					ht.T_NAME,
+					ht.del_flag
+				from
+					hy_team ht
+				<#if accountId?? && accountType?? && accountType != 1 && accountType != 4>
+					,hy_atc_mapping atc
+					 where ht.t_id = atc.car_team_id 
+					 	and atc.ACCOUNT_ID = ${accountId}
+						and atc_type = 0
+				</#if>
+				) team
+				<#if accountId?? && accountType?? && accountType == 4>
+				,(
+					select
+						ha.BUSINESS_ID
+					from
+						hy_account_business ha
+					where
+						ha.ACCOUNT_ID = ${accountId}
+				) hab
+				</#if>
+				where team.del_flag=0
+				and car.CAR_ID = detail.CAR_ID
+				and car.CAR_TEAM_ID = team.T_ID
+				<#if accountId?? && accountType?? && accountType == 4>
+				 	and hab.BUSINESS_ID = detail.CAR_OWNER
+				</#if>
+				<#if engineType?? && engineType != "-1">
+		    		and detail.ENGINE_TYPE= ${engineType}
+				</#if>
+				<#if carType?? && carType != "-1">
+			    	and car.CAR_TYPE = ${carType}
+			    </#if>
+			    <#if carID??>
+			    	and car.CAR_ID = ${carID}
+			    </#if>
+		  ) team_car
+		inner join hy_terminal ter on ter.T_ID = if (car_terminal_id is not null and car_terminal_id > 0, car_terminal_id,car_terminal)
+	    left join hy_terminal bdter on team_car.CAR_TERMINAL = bdter.T_ID
+	    left join hy_terminal fkter on team_car.CAR_TERMINAL_ID = fkter.T_ID
+	    left join hy_business business on business.cid = team_car.CAR_OWNER
+	    left join (select * from hy_basicdata where DATA_TYPE = 40) bd ON team_car.ENGINE_TYPE = bd.DATA_CODE
+	    left join (select * from hy_basicdata where DATA_TYPE = 2) basic ON team_car.CAR_TYPE = basic.data_id
+	    where 1=1 
+	    	and team_car.del_flag=0
+			<#if chassisNum?? && chassisNum != "">
+		    	and team_car.CHASSIS_NUM LIKE CONCAT(CONCAT('%','${chassisNum}'),'%') escape '!'
+			</#if>
+			<#if carCph?? && carCph != "">
+		    	and team_car.CAR_CPH LIKE CONCAT(CONCAT('%','${carCph}'),'%') escape '!'
+			</#if>
+			<#if carOwnerStr??>
+				and business.business_name like CONCAT(CONCAT('%','${carOwnerStr}'),'%' ) escape '!'
+			</#if>
+			<#if companyName??>
+				and team_car.T_NAME like CONCAT(CONCAT('%','${companyName}'), '%') escape '!'
+			</#if>
+			<#if terid??>
+				and bdter.T_CODE like CONCAT(CONCAT('%','${terid}'), '%') escape '!'
+		    </#if>
+			<#if carTerid??>
+		        and fkter.T_CODE like CONCAT(CONCAT('%','${carTerid}'), '%') escape '!'
+		    </#if>
+		    <#if isTer?? && isTer == "1">
+		    	and (team_car.CAR_TERMINAL > 0 or team_car.CAR_TERMINAL_ID > 0)
+			</#if>
+			<#if structureNum??>
+				and team_car.STRUCTURE_NUM  like CONCAT(CONCAT('%','${structureNum}'), '%') escape '!'
+			</#if>
+		]]>
+	</sql-query>
+
+</dynamic-hibernate-statement>

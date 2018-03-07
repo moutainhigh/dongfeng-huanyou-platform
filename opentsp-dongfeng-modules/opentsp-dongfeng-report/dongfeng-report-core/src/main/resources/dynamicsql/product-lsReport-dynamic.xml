@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+
+<dynamic-hibernate-statement>
+    <!-- 查询生产线漏扫信息-->
+<sql-query name="queryLsReport">
+    <![CDATA[
+            select
+            CHASSIS_NO chassisNum,
+            WORK_CENTER workCenter,
+            MATERIALS_ID materialsId,
+            MATERIALS_NAME materialsName,
+            PLAN_TIME planTime,
+            INSTOCK_TIME instockTime,
+            QUALIFIED_TIME qualifiedTime,
+            REMOVAL_TIME removalTime,
+            STORAGE_LOCATION storageLoc
+            from hy_lsreport
+            where 1=1
+            <#if chassisNum?? && chassisNum!="">
+             and CHASSIS_NO like CONCAT(CONCAT('%','${chassisNum}'), '%') escape '!'
+            </#if>
+            <#if storageLoc?? && storageLoc!="">
+             and STORAGE_LOCATION like CONCAT(CONCAT('%','${storageLoc}'), '%') escape '!'
+            </#if>
+		]]>
+</sql-query>
+</dynamic-hibernate-statement>

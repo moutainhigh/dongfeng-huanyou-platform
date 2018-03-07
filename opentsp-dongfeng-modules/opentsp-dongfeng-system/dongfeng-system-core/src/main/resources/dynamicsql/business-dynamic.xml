@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+<dynamic-hibernate-statement>
+    <!--yaocy 查询用户列表-->
+    <sql-query name="queryBusinessesPage">
+        <![CDATA[
+		select
+		bu.cid cid,
+		bu.business_name businessName,
+		bu.business_code businessCode,
+		bu.address_code addressCode,
+		ba.name addressName,
+		bu.link_person linkPerson,
+		bu.link_telpone linkTelpone,
+		bu.fax fax,
+		bu.address_common addressCommon,
+		bu.common common,
+		bu.certificate_code certificateCode,
+		bu.vehicleLic_code vehicleLicCode,
+		bu.roadTransLic_code roadTransLicCode,
+		bu.organization_code organizationCode,
+		bu.c_type ctype,
+		CASE bu.c_type
+            WHEN 1 THEN '企业'
+            WHEN 2 THEN '车主'
+            ELSE ''
+        END as customerType
+		from hy_business
+		bu
+		left join (SELECT id,name FROM base_area GROUP BY id) ba on bu.address_code = ba.id where 1 = 1
+		<#if businessName?? && businessName != "">
+			AND bu.business_name LIKE '%${businessName}%' escape '!'
+		</#if>
+		<#if businessCode?? && businessCode != "">
+			AND bu.business_code LIKE '%${businessCode}%' escape '!'
+		</#if>
+		<#if addressCode?? && addressCode != "">
+			AND bu.address_code = ${addressCode}
+		</#if>
+		<#if type??>
+			AND bu.c_type = ${type}
+		</#if>
+		<#if accountType?? && accountType != 1>
+			AND bu.ACCOUNT_ID =${accountId}
+		</#if>
+		ORDER BY cid desc
+		]]>
+    </sql-query>
+    <sql-query name="getBusiness">
+        <![CDATA[
+		select
+		bu.cid cid,
+		bu.business_name businessName,
+		bu.business_code businessCode,
+		bu.address_code addressCode,
+		ba.name addressName,
+		bu.link_person linkPerson,
+		bu.link_telpone linkTelpone,
+		bu.fax fax,
+		bu.address_common addressCommon,
+		bu.common common,
+		bu.certificate_code certificateCode,
+		bu.vehicleLic_code vehicleLicCode,
+		bu.roadTransLic_code roadTransLicCode,
+		bu.organization_code organizationCode,
+		bu.c_type ctype
+		from hy_business
+		bu
+		left join base_area ba on bu.address_code = ba.id where 1 = 1
+		AND bu.cid = ${id}
+		]]>
+    </sql-query>
+    <sql-query name="checkBusinessCascadeCar">
+        <![CDATA[
+		    SELECT car_id cid FROM hy_car_detail WHERE car_owner = ${id}
+		]]>
+    </sql-query>
+    <sql-query name="checkBusinessCascadeAccount">
+        <![CDATA[
+		    SELECT business_id cid FROM hy_account_business WHERE business_id = ${id}
+		]]>
+    </sql-query>
+    <sql-query name="checkBusinessCodeIsExist">
+        <![CDATA[
+		    select business_code businessCode from hy_business where business_code = '${businessCode}'
+		]]>
+    </sql-query>
+    <sql-query name="checkCodeIsExist">
+        <![CDATA[
+		    select business_code businessCode from hy_business where
+		    <#if type == "1">
+		    	certificate_code = '${code}'
+		    </#if>
+		    <#if type == "2">
+		    	vehicleLic_code = '${code}'
+		    </#if>
+		    <#if type == "3">
+		    	roadTransLic_code = '${code}'
+		    </#if>
+		    <#if type == "4">
+		    	organization_code = '${code}'
+		    </#if>
+		]]>
+    </sql-query>
+    <sql-query name="queryAllBusinessByAccountIdAndAccountType">
+        <![CDATA[
+		select
+			bu.cid cid,
+			bu.business_name businessName,
+			bu.business_code businessCode,
+			bu.address_code addressCode,
+			bu.link_person linkPerson,
+			bu.link_telpone linkTelpone,
+			bu.fax fax,
+			bu.address_common addressCommon,
+			bu.common common,
+			bu.certificate_code certificateCode,
+			bu.vehicleLic_code vehicleLicCode,
+			bu.roadTransLic_code roadTransLicCode,
+			bu.organization_code organizationCode,
+			bu.c_type cType,
+			bu.ACCOUNT_TYPE as accountType,
+			bu.ACCOUNT_ID as accountId
+		from hy_business bu
+		<#if accountType != 1>
+			WHERE bu.ACCOUNT_ID = ${accountId}
+		</#if>
+		ORDER BY cid desc
+		]]>
+    </sql-query>
+	<sql-query name="checkBusinessCascadeNoF9Car">
+		<![CDATA[
+		    SELECT COUNT(*) as counts FROM hy_car_mesdata WHERE DEL_FLAG = 0 and BUSINESS_ID = ${id}
+		]]>
+	</sql-query>
+</dynamic-hibernate-statement>

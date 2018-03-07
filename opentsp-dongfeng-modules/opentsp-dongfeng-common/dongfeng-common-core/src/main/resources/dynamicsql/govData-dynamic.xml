@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+<dynamic-hibernate-statement>
+    <!-- 通过GOV_PARENT_CODE查询省市编码字典表-->
+    <sql-query name="queryGovDataList">
+        <![CDATA[
+            SELECT
+                GOV_CODE as govCode,
+                GOV_NAME as govName,
+                GOV_PARENT_CODE as govParCode
+            FROM hy_gov_org
+            WHERE GOV_PARENT_CODE = ${pCode}
+        ]]>
+    </sql-query>
+    <!-- 通过GOV_PARENT_CODE查询去掉省直辖县级行政区省市编码字典表-->
+    <sql-query name="queryGovDataListNotCounty">
+        <![CDATA[
+            SELECT
+                GOV_CODE as govCode,
+                GOV_NAME as govName,
+                GOV_PARENT_CODE as govParCode
+            FROM hy_gov_org
+            WHERE GOV_PARENT_CODE = ${pCode}
+            and GOV_CODE not in("139001","139002","419001","429004","429005","429006","429021",
+            "469001","469002","469005","469006","469007","469021","469022","469023","469024","469025",
+            "469026","469027","469028","469029","469030")
+        ]]>
+    </sql-query>
+    <!-- 通过GOV_CODE查询省市编码字典表-->
+    <sql-query name="getGovData">
+        <![CDATA[
+            SELECT
+                GOV_CODE as govCode,
+                GOV_NAME as govName,
+                GOV_PARENT_CODE as govParCode
+            FROM hy_gov_org
+            WHERE GOV_CODE = ${code}
+        ]]>
+    </sql-query>
+    <!-- 通过GOV_CODElist查询省市编码字典表-->
+    <sql-query name="getGovDataList">
+        <![CDATA[
+            SELECT
+                GOV_CODE as govCode,
+                GOV_NAME as govName,
+                GOV_PARENT_CODE as govParCode
+            FROM hy_gov_org
+            WHERE 1=1
+            <#if codes != "">
+				and GOV_CODE in (${codes})
+		    </#if>
+        ]]>
+    </sql-query>
+</dynamic-hibernate-statement>

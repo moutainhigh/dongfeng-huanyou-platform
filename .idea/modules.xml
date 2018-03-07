@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-authority/dongfeng-authority-command/dongfeng-authority-command.iml" filepath="$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-authority/dongfeng-authority-command/dongfeng-authority-command.iml" />
+      <module fileurl="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-authority/dongfeng-authority-core/dongfeng-authority-core.iml" filepath="$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-authority/dongfeng-authority-core/dongfeng-authority-core.iml" />
+      <module fileurl="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-common/dongfeng-common-command/dongfeng-common-command.iml" filepath="$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-common/dongfeng-common-command/dongfeng-common-command.iml" />
+      <module fileurl="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-common/dongfeng-common-core/dongfeng-common-core.iml" filepath="$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-common/dongfeng-common-core/dongfeng-common-core.iml" />
+      <module fileurl="file://$PROJECT_DIR$/opentsp-gateway/dongfeng-gateway-tcp/dongfeng-gateway-tcp.iml" filepath="$PROJECT_DIR$/opentsp-gateway/dongfeng-gateway-tcp/dongfeng-gateway-tcp.iml" />
+      <module fileurl="file://$PROJECT_DIR$/dongfeng-huanyou-platform.iml" filepath="$PROJECT_DIR$/dongfeng-huanyou-platform.iml" />
+      <module fileurl="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-kafka/dongfeng-kafka-core/dongfeng-kafka-core.iml" filepath="$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-kafka/dongfeng-kafka-core/dongfeng-kafka-core.iml" />
+      <module fileurl="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-mail/dongfeng-mail-command/dongfeng-mail-command.iml" filepath="$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-mail/dongfeng-mail-command/dongfeng-mail-command.iml" />
+      <module fileurl="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-mail/dongfeng-mail-core/dongfeng-mail-core.iml" filepath="$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-mail/dongfeng-mail-core/dongfeng-mail-core.iml" />
+      <module fileurl="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-monitor/dongfeng-monitor-command/dongfeng-monitor-command.iml" filepath="$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-monitor/dongfeng-monitor-command/dongfeng-monitor-command.iml" />
+      <module fileurl="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-monitor/dongfeng-monitor-core/dongfeng-monitor-core.iml" filepath="$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-monitor/dongfeng-monitor-core/dongfeng-monitor-core.iml" />
+      <module fileurl="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-openapi/dongfeng-openapi-command/dongfeng-openapi-command.iml" filepath="$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-openapi/dongfeng-openapi-command/dongfeng-openapi-command.iml" />
+      <module fileurl="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-openapi/dongfeng-openapi-core/dongfeng-openapi-core.iml" filepath="$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-openapi/dongfeng-openapi-core/dongfeng-openapi-core.iml" />
+      <module fileurl="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-report/dongfeng-report-command/dongfeng-report-command.iml" filepath="$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-report/dongfeng-report-command/dongfeng-report-command.iml" />
+      <module fileurl="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-report/dongfeng-report-core/dongfeng-report-core.iml" filepath="$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-report/dongfeng-report-core/dongfeng-report-core.iml" />
+      <module fileurl="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-system/dongfeng-system-command/dongfeng-system-command.iml" filepath="$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-system/dongfeng-system-command/dongfeng-system-command.iml" />
+      <module fileurl="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-system/dongfeng-system-core/dongfeng-system-core.iml" filepath="$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-system/dongfeng-system-core/dongfeng-system-core.iml" />
+      <module fileurl="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-authority/opentsp-dongfeng-authority.iml" filepath="$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-authority/opentsp-dongfeng-authority.iml" />
+      <module fileurl="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-common/opentsp-dongfeng-common.iml" filepath="$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-common/opentsp-dongfeng-common.iml" />
+      <module fileurl="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-kafka/opentsp-dongfeng-kafka.iml" filepath="$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-kafka/opentsp-dongfeng-kafka.iml" />
+      <module fileurl="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-mail/opentsp-dongfeng-mail.iml" filepath="$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-mail/opentsp-dongfeng-mail.iml" />
+      <module fileurl="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-modules.iml" filepath="$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-modules.iml" />
+      <module fileurl="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-monitor/opentsp-dongfeng-monitor.iml" filepath="$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-monitor/opentsp-dongfeng-monitor.iml" />
+      <module fileurl="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-openapi/opentsp-dongfeng-openapi.iml" filepath="$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-openapi/opentsp-dongfeng-openapi.iml" />
+      <module fileurl="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-push/opentsp-dongfeng-push.iml" filepath="$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-push/opentsp-dongfeng-push.iml" />
+      <module fileurl="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-report/opentsp-dongfeng-report.iml" filepath="$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-report/opentsp-dongfeng-report.iml" />
+      <module fileurl="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-rpws/opentsp-dongfeng-rpws.iml" filepath="$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-rpws/opentsp-dongfeng-rpws.iml" />
+      <module fileurl="file://$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-system/opentsp-dongfeng-system.iml" filepath="$PROJECT_DIR$/opentsp-dongfeng-modules/opentsp-dongfeng-system/opentsp-dongfeng-system.iml" />
+      <module fileurl="file://$PROJECT_DIR$/opentsp-gateway/opentsp-gateway.iml" filepath="$PROJECT_DIR$/opentsp-gateway/opentsp-gateway.iml" />
+    </modules>
+  </component>
+</project>

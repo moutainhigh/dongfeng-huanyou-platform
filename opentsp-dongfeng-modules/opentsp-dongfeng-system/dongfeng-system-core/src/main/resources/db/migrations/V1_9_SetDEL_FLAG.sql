@@ -1,0 +1,1 @@
+alter table hy_car alter column DEL_FLAG set DEFAULT 0;

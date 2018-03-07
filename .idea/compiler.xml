@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <resourceExtensions />
+    <wildcardResourcePatterns>
+      <entry name="!?*.java" />
+      <entry name="!?*.form" />
+      <entry name="!?*.class" />
+      <entry name="!?*.groovy" />
+      <entry name="!?*.scala" />
+      <entry name="!?*.flex" />
+      <entry name="!?*.kt" />
+      <entry name="!?*.clj" />
+      <entry name="!?*.aj" />
+    </wildcardResourcePatterns>
+    <annotationProcessing>
+      <profile default="true" name="Default" enabled="false">
+        <processorPath useClasspath="true" />
+      </profile>
+      <profile default="false" name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="true" />
+        <module name="dongfeng-authority-command" />
+        <module name="dongfeng-authority-core" />
+        <module name="dongfeng-common-command" />
+        <module name="dongfeng-common-core" />
+        <module name="dongfeng-gateway-tcp" />
+        <module name="dongfeng-kafka-core" />
+        <module name="dongfeng-mail-command" />
+        <module name="dongfeng-mail-core" />
+        <module name="dongfeng-monitor-command" />
+        <module name="dongfeng-monitor-core" />
+        <module name="dongfeng-openapi-command" />
+        <module name="dongfeng-openapi-core" />
+        <module name="dongfeng-report-command" />
+        <module name="dongfeng-report-core" />
+        <module name="dongfeng-system-command" />
+        <module name="dongfeng-system-core" />
+        <module name="opentsp-dongfeng-push" />
+        <module name="opentsp-dongfeng-rpws" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="dongfeng-authority-command" target="1.6" />
+      <module name="dongfeng-authority-core" target="1.8" />
+      <module name="dongfeng-common-command" target="1.6" />
+      <module name="dongfeng-common-core" target="1.7" />
+      <module name="dongfeng-gateway-tcp" target="1.8" />
+      <module name="dongfeng-huanyou-platform" target="1.6" />
+      <module name="dongfeng-kafka-core" target="1.8" />
+      <module name="dongfeng-mail-command" target="1.6" />
+      <module name="dongfeng-mail-core" target="1.8" />
+      <module name="dongfeng-monitor-command" target="1.6" />
+      <module name="dongfeng-monitor-core" target="1.8" />
+      <module name="dongfeng-openapi-command" target="1.7" />
+      <module name="dongfeng-openapi-core" target="1.8" />
+      <module name="dongfeng-report-command" target="1.6" />
+      <module name="dongfeng-report-core" target="1.8" />
+      <module name="dongfeng-system-command" target="1.6" />
+      <module name="dongfeng-system-core" target="1.8" />
+      <module name="opentsp-dongfeng-authority" target="1.6" />
+      <module name="opentsp-dongfeng-common" target="1.6" />
+      <module name="opentsp-dongfeng-kafka" target="1.6" />
+      <module name="opentsp-dongfeng-mail" target="1.6" />
+      <module name="opentsp-dongfeng-modules" target="1.6" />
+      <module name="opentsp-dongfeng-monitor" target="1.6" />
+      <module name="opentsp-dongfeng-openapi" target="1.6" />
+      <module name="opentsp-dongfeng-push" target="1.8" />
+      <module name="opentsp-dongfeng-report" target="1.6" />
+      <module name="opentsp-dongfeng-rpws" target="1.8" />
+      <module name="opentsp-dongfeng-system" target="1.6" />
+      <module name="opentsp-gateway" target="1.6" />
+    </bytecodeTargetLevel>
+  </component>
+</project>

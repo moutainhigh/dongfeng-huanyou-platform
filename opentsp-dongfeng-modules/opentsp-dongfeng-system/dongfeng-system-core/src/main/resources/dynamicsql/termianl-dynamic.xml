@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+<dynamic-hibernate-statement>
+    <!--获取用户下所有的分组-->
+    <sql-query name="selectTerminalCarTeamIdByAccount">
+        <![CDATA[
+           <#if userType gt 1>
+           SELECT CAR_TEAM_ID FROM hy_atc_mapping  WHERE ACCOUNT_ID = ${userId} AND ATC_TYPE = 0
+           <#else>
+            SELECT T_ID FROM hy_team where del_flag = 0
+           </#if>
+		]]>
+    </sql-query>
+    <!--获取用户下所有的车辆id-->
+    <sql-query name="terminalSelectVehicleId">
+        <![CDATA[
+        select car.CAR_ID carId
+            from hy_car car
+            LEFT JOIN hy_terminal bdter ON car.CAR_TERMINAL = bdter.T_ID
+            LEFT JOIN hy_terminal fkter ON car.CAR_TERMINAL_ID = fkter.T_ID
+            LEFT JOIN hy_team team ON car.CAR_TEAM_ID = team.T_ID
+            LEFT JOIN hy_car_detail detail ON car.CAR_ID = detail.CAR_ID
+            LEFT JOIN hy_business business ON business.cid = detail.CAR_OWNER
+            LEFT JOIN (select * from hy_basicdata where DATA_TYPE = 2) b1 ON car.CAR_TYPE = b1.DATA_ID
+            LEFT JOIN (select * from hy_basicdata where DATA_TYPE = 40) b2 ON detail.ENGINE_TYPE = b2.DATA_CODE
+            LEFT JOIN (select * from hy_basicdata where DATA_TYPE = 39) b3 ON detail.SALES_STATUS = b3.DATA_CODE
+            <#if userType gt 1>
+                INNER JOIN (SELECT CAR_TEAM_ID FROM hy_atc_mapping  WHERE ACCOUNT_ID = ${userId} AND ATC_TYPE = 0) atc ON  atc.CAR_TEAM_ID = car.CAR_TEAM_ID
+            </#if>
+        where car.DEL_FLAG != ${delFlag}
+        order by car.CAR_ID desc
+		]]>
+    </sql-query>
+    <!--根据id查询终端 -->
+    <sql-query name="queryTerminalById">
+        <![CDATA[
+            SELECT
+            T.T_ID tId,
+            T.DISTRICT district,
+            T.T_SIM tSim,
+            T.T_COMMUNICATION_ID tCommunicationId,
+            T.T_TEAM_ID tTeamId,
+            T.T_CODE tCode,
+            T.T_TYPE_ID tTypeId,
+            T.T_SIM_SIGN tSimSign,
+            T.DEL_FLAG delFlag,
+            T.ALARM_HANDLE alarmHandle,
+            T.T_AUTO_COMMUNICATION_ID tAutoCommunicationId,
+            T.AUTO_FLAG autoFlag,
+            T.IMPORT_TIME importTime,
+            T.T_STYLE tStyle,
+            T.T_MODEL tModel,
+            T.T_COMMON tCommon,
+            T.T_MIC tMic,
+            T.T_CAMERA_CHANNEL tCameraChannel,
+            T.t_label_id tLabelId,
+            T.applianceEngineType applianceEngineType,
+            T.applianceCarType applianceCarType,
+            T.CREATE_USER createUser,
+            TEAM.T_NAME teamName
+            FROM hy_terminal T
+            LEFT JOIN hy_team  TEAM ON T.T_TEAM_ID = TEAM.T_ID
+            WHERE  1= 1
+             <#if delFlag?? >
+              AND T.DEL_FLAG != ${delFlag}
+            </#if>
+             <#if id?? >
+              AND T.T_ID = ${id}
+            </#if>
+		]]>
+    </sql-query>
+    <!--查询终端管理的车辆信息，经销商信息，客户信息-->
+    <sql-query name="queryTerminalCompleteInfo">
+        <![CDATA[
+           SELECT
+            T.T_ID tId,
+            T.T_CODE tCode,
+            T.T_SIM tSim,
+            T.T_COMMUNICATION_ID tCommunicationId,
+            T.T_AUTO_COMMUNICATION_ID tAutoCommunicationId,
+            T.T_TYPE_ID tTypeId,
+            T.T_MODEL tModel,
+            T.T_STYLE tStyle,
+            T.T_TEAM_ID tTeamId,
+            T.t_label_id tLabelId,
+            T.T_CAMERA_CHANNEL tCameraChannel,
+            T.T_MIC tMic,
+            T.T_COMMON tCommon,
+           IF (C.CAR_TERMINAL_ID IS NOT NULL AND C.CAR_TERMINAL_ID > 0,
+            IF(T.T_AUTO_COMMUNICATION_ID IS NULL, T.T_COMMUNICATION_ID ,T.T_AUTO_COMMUNICATION_ID),
+            IF(T.T_AUTO_COMMUNICATION_ID IS NULL, T.T_COMMUNICATION_ID ,T.T_AUTO_COMMUNICATION_ID)) AS communicationId,
+            C.CAR_ID carId,
+            C.CAR_CPH carNum,
+            C.CHASSIS_NUM chassisNum,
+            B.cid carOwnerId,
+            B.business_name carOwnerName,
+            TM.T_NAME teamName,
+            CD.ENGINE_TYPE engineType
+            FROM hy_terminal T LEFT JOIN hy_car C ON (T.T_ID = C.CAR_TERMINAL  OR T.T_ID = C.CAR_TERMINAL_ID)
+            LEFT JOIN hy_car_detail CD ON C.CAR_ID = CD.CAR_ID
+            LEFT JOIN hy_business B ON B.cid = CD.CAR_OWNER
+            LEFT JOIN hy_team TM ON T.T_TEAM_ID = TM.T_ID
+            WHERE 1 = 1 AND T.DEL_FLAG != ${delFlag}
+            <#if id?? >
+              AND T.T_ID = ${id}
+            </#if>
+            <#if terminalId?? && terminalId != "">
+              AND T.T_CODE = '${terminalId}'
+           </#if>
+            ORDER BY T.T_ID ASC
+		]]>
+    </sql-query>
+    <!--搜索终端-->
+    <sql-query name="searchTerminalByParam">
+        <![CDATA[
+        SELECT * from (
+        SELECT
+           TER.T_ID tId,
+           TER.T_CODE tCode,
+           TER.T_TEAM_ID  tTeamId,
+           TER.T_SIM tSim,
+           TER.T_COMMUNICATION_ID tCommunicationId,
+           TER.T_AUTO_COMMUNICATION_ID tAutoCommunicationId,
+           TER.T_MODEL tModel,
+           TER.T_COMMON tCommon,
+           TER.t_label_id tLabelId,
+           TER.T_STYLE tStyle,
+           if(TER.T_STYLE = 0, 'FK控制器', '北斗一体机') as typeName,
+           TER.T_TYPE_ID tTypeId,
+           TY.TYPE_NAME  protocol,
+           IFNULL(C.CAR_ID,C1.CAR_ID) carId,
+           IFNULL(C.CAR_CPH,C1.CAR_CPH) carNum,
+           IFNULL(C.CHASSIS_NUM,C1.CHASSIS_NUM) chassisNum,
+           T.T_NAME teamName,
+           TM.TM_NAME modelName,
+           IFNULL(FROM_UNIXTIME(TER.IMPORT_TIME),'') AS createTime,
+           AC.ACCOUNT_NAME createUserName
+        FROM hy_terminal TER
+        LEFT JOIN hy_team  T ON TER.T_TEAM_ID = T.T_ID
+        LEFT JOIN hy_car C FORCE INDEX(CAR_TERMINAL_ID_INDEX) ON C.CAR_TERMINAL_ID = TER.T_ID
+	    LEFT JOIN hy_car C1 FORCE INDEX(CAR_TERMINAL_INDEX) ON C1.CAR_TERMINAL  = TER.T_ID
+        LEFT JOIN hy_terminal_type TY ON TY.TYPE_ID = TER.T_TYPE_ID
+        LEFT JOIN hy_terminal_model TM ON (TM.TM_ID = TER.T_MODEL)
+        LEFT JOIN HY_ACCOUNT AC ON AC.ACCOUNT_ID = TER.CREATE_USER
+       <#if accountType gt 1>
+            INNER JOIN hy_atc_mapping atc ON  atc.CAR_TEAM_ID = TER.T_TEAM_ID
+       </#if>
+        WHERE 1= 1 AND TER.DEL_FLAG != ${delFlag}
+        <#if accountType gt 1>
+            AND atc.ACCOUNT_ID = ${accountId} AND atc.ATC_TYPE = 0
+        </#if>
+	      <#if type?? && type == "1">
+	       AND (TER.T_STYLE = 1 || TER.T_STYLE is null)
+	      </#if>
+	      <#if type?? && type == "0">
+	       AND TER.T_STYLE = 0
+	      </#if>
+	      <#if simNo??  && simNo != "">
+	       AND TER.T_SIM LIKE '%${simNo}%' escape '!'
+	      </#if>
+	      <#if reAgent??  && reAgent != "">
+	       AND T.T_NAME LIKE '%${reAgent}%' escape '!'
+	      </#if>
+           <#if devLabelId??  && devLabelId != "">
+           AND (TER.t_label_id LIKE '%${devLabelId}%' escape '!'
+           OR TER.T_CODE LIKE '%${devLabelId}%' escape '!')
+          </#if>
+           <#if terminalId?? && terminalId != "">
+	       AND TER.T_CODE LIKE '%${terminalId}%' escape '!'
+	      </#if>
+	      ) TEMP WHERE 1 = 1
+	       <#if reChassis??  && reChassis != "">
+	       AND TEMP.chassisNum LIKE '%${reChassis}%' escape '!'
+	      </#if>
+	       <#if reVehicleNum??  && reVehicleNum != "">
+	       AND TEMP.carNum LIKE '%${reVehicleNum}%' escape '!'
+	      </#if>
+	      <#if reStatus??  && reStatus != "" && reStatus == "0">
+	       AND TEMP.carId IS NULL
+	      </#if>
+	      <#if reStatus??  && reStatus != "" && reStatus == "1">
+	       AND TEMP.carId IS  NOT NULL
+	      </#if>
+          ORDER BY TEMP.tId desc
+		]]>
+    </sql-query>
+      <!--获取终端所支持的协议-->
+    <sql-query name="queryTerminalProtocol">
+        <![CDATA[
+         SELECT
+            TYPE_ID typeId,
+            TYPE_NAME typeName,
+            PRODUCER_ID producerId,
+            TRAVEL_VERSION travelVersion,
+            PROTOCOL_VERSION protocolVersion,
+            GPS_MODULE gpsModule
+            FROM hy_terminal_type
+            WHERE 1=1
+            <#if typeName?? && typeName != "">
+                and TYPE_NAME = ${typeName}
+            </#if>
+            <#if producerId?? && producerId != -1 >
+                and PRODUCER_ID = ${producerId}
+            </#if>
+            <#if travelVersion?? && travelVersion != -1 >
+                and TRAVEL_VERSION = ${travelVersion}
+            </#if>
+            <#if protocolVersion?? && protocolVersion != -1 >
+                and PROTOCOL_VERSION = ${protocolVersion}
+            </#if>
+            <#if gpsModule?? && gpsModule != -1 >
+                and GPS_MODULE = ${gpsModule}
+            </#if>
+		]]>
+    </sql-query>
+    <!--根据id查询终端 -->
+    <sql-query name="queryTIdByParam">
+        <![CDATA[
+            SELECT
+            T.T_ID
+            FROM hy_terminal T
+            WHERE  T.DEL_FLAG != ${delFlag}
+            <#if tCode?? && tCode != "">
+                and T.T_CODE = '${tCode}'
+            </#if>
+            <#if simNo?? && simNo != "">
+                and T.T_SIM = '${simNo}'
+            </#if>
+             <#if communicationId?? && communicationId != "">
+                and (T.T_COMMUNICATION_ID = ${communicationId} or  T.T_AUTO_COMMUNICATION_ID = ${communicationId})
+            </#if>
+            <#if labelId?? && labelId != "">
+                and T.t_label_id = '${labelId}'
+            </#if>
+             <#if tId?? && tId != "">
+                and T.T_ID != ${tId}
+            </#if>
+		]]>
+    </sql-query>
+    <!--根据id查询终端 -->
+    <sql-query name="queryCarIdByParam">
+        <![CDATA[
+            SELECT C.CAR_ID FROM hy_car C
+            WHERE C.DEL_FLAG != ${delFlag}
+            <#if tId?? && tId != "">
+                and C.CAR_TERMINAL = ${tId} OR C.CAR_TERMINAL_ID = ${tId}
+            </#if>
+		]]>
+    </sql-query>
+     <!--根据id查询终端 -->
+    <sql-query name="queryTeamIdByParam">
+        <![CDATA[
+            SELECT T.T_ID FROM hy_team T
+            <#if accountType gt 1>
+            INNER JOIN hy_atc_mapping AC ON  AC.CAR_TEAM_ID = T.T_ID AND   AC.ACCOUNT_ID = ${accountId}
+            </#if>
+            WHERE T.DEL_FLAG != ${delFlag}
+            <#if dealerCode?? && dealerCode != "">
+                and T.DEALER_CODE = '${dealerCode}'
+            </#if>
+		]]>
+    </sql-query>
+    <sql-query name="hasSettingParam">
+        <![CDATA[
+           SELECT
+             id
+           FROM hy_terminal_setting_param
+           WHERE  terminal_id = ${terminalId} AND param_type = ${paramType}
+		]]>
+    </sql-query>
+</dynamic-hibernate-statement>

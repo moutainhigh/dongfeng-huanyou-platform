@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+<dynamic-hibernate-statement>
+    <sql-query name="querySubUserIDs">
+        <![CDATA[
+            SELECT
+            <#if accountId??>
+                queryChildrenAccountInfo(${accountId}) as childs
+            </#if>
+        ]]>
+    </sql-query>
+
+       <!--yaocy 查询用户列表-->
+    <sql-query name="queryUserList">
+        <![CDATA[
+            SELECT
+            <#if accountId?? && accountId != 1>
+                t1.ACCOUNT_ID AS accountId,
+                t1.ACCOUNT_NAME AS accountName,
+                t1.ACCOUNT_DATE AS accountDate,
+                t1.ACCOUNT_LINKTEL AS accountLinktel,
+                t1.ACCOUNT_TYPE AS accountType,
+                t1.JOB_TYPE AS jobType,
+                t2.ACCOUNT_NAME AS createAccount,
+                t1.LOCK_ACCOUNT AS lockAccount,
+                t1.TERM_VILIDATE AS termVilidate
+            </#if>
+            <#if accountId?? && accountId == 1 && userType == 1>
+                t1.ACCOUNT_ID AS accountId,
+                t1.ACCOUNT_NAME AS accountName,
+                t1.ACCOUNT_DATE AS accountDate,
+                t1.ACCOUNT_LINKTEL AS accountLinktel,
+                t1.ACCOUNT_TYPE AS accountType,
+                t1.JOB_TYPE AS jobType,
+                t2.ACCOUNT_NAME AS createAccount,
+                t1.LOCK_ACCOUNT AS lockAccount,
+                t1.TERM_VILIDATE AS termVilidate,
+                t1.ACCOUNT_PWD AS password
+            </#if>
+            FROM hy_account t1
+            LEFT JOIN hy_account AS t2 ON t1.create_account = t2.ACCOUNT_ID
+            WHERE t1.DEL_FLAG != 1 and t1.ACCOUNT_ID !=1
+            <#if userType?? && userType != 1>
+                AND FIND_IN_SET(t1.create_account, '${subUserIDs}') > 0
+            </#if>
+            <#if accountType?? && accountType != "">
+                AND t1.ACCOUNT_TYPE = '${accountType}'
+            </#if>
+            <#if lockAccount?? && lockAccount != "">
+                AND t1.LOCK_ACCOUNT = '${lockAccount}'
+            </#if>
+            <#if pastDue?? && pastDue != "">
+                <#if pastDue == "0">
+                AND (FROM_UNIXTIME(UNIX_TIMESTAMP(),'%Y%m%d') <=  FROM_UNIXTIME(t1.TERM_VILIDATE,'%Y%m%d') OR t1.TERM_VILIDATE > 2147443200)
+                </#if>
+                <#if pastDue == "1">
+                AND FROM_UNIXTIME(UNIX_TIMESTAMP(),'%Y%m%d') > FROM_UNIXTIME(t1.TERM_VILIDATE,'%Y%m%d')
+                </#if>
+            </#if>
+            <#if createAccount?? && createAccount != "">
+                AND t2.ACCOUNT_NAME like '%${createAccount}%' escape '!'
+            </#if>
+            <#if accountName?? && accountName != "">
+                AND t1.ACCOUNT_NAME  like '%${accountName}%' escape '!'
+            </#if>
+            <#if busiAccounts?? && busiAccounts?size gt 0 >
+               and t1.ACCOUNT_ID in
+               (
+               <#list busiAccounts as id>
+                    <#if busiAccounts?size == id_index +1>
+                        '${id}'
+                    <#else>
+                        '${id}',
+                    </#if>
+               </#list>
+               )
+            </#if>
+            <#if dealerAccounts?? && dealerAccounts?size gt 0 >
+               and t1.ACCOUNT_ID in
+               (
+               <#list dealerAccounts as id>
+                    <#if dealerAccounts?size == id_index +1>
+                        '${id}'
+                    <#else>
+                        '${id}',
+                    </#if>
+               </#list>
+               )
+            </#if>
+            <#if stationAccounts?? && stationAccounts?size gt 0 >
+               and t1.ACCOUNT_ID in
+               (
+               <#list stationAccounts as id>
+                    <#if stationAccounts?size == id_index +1>
+                        '${id}'
+                    <#else>
+                        '${id}',
+                    </#if>
+               </#list>
+               )
+            </#if>
+
+            <#if roleAccounts?? && roleAccounts?size gt 0 >
+               and t1.ACCOUNT_ID in
+               (
+               <#list roleAccounts as id>
+                    <#if roleAccounts?size == id_index +1>
+                        '${id}'
+                    <#else>
+                        '${id}',
+                    </#if>
+               </#list>
+               )
+            </#if>
+            ORDER BY t1.ACCOUNT_ID DESC
+        ]]>
+    </sql-query>
+
+    <sql-query name="queryUserByBusiness">
+        <![CDATA[
+            SELECT
+                DISTINCT acc_buss.ACCOUNT_ID
+            FROM hy_business buss
+            INNER JOIN hy_account_business acc_buss ON buss.cid = acc_buss.BUSINESS_ID
+            WHERE 1 = 1
+            <#if businessName?? && businessName != "">
+                AND buss.business_name like '%${businessName}%' escape '!'
+            </#if>
+        ]]>
+    </sql-query>
+
+    <sql-query name="queryUserByDealer">
+        <![CDATA[
+            SELECT DISTINCT atc.ACCOUNT_ID
+            FROM hy_team team
+            INNER JOIN hy_atc_mapping atc ON atc.CAR_TEAM_ID = team.T_ID
+            WHERE 1 = 1
+            <#if dealerName?? && dealerName != "">
+                AND team.t_name like '%${dealerName}%' escape '!'
+            </#if>
+        ]]>
+    </sql-query>
+
+    <sql-query name="queryUserByStation">
+        <![CDATA[
+            SELECT DISTINCT acc_station.ACCOUNT_ID
+            FROM hy_service_station station
+            INNER JOIN hy_account_station acc_station ON station.id = acc_station.STATION_ID
+            WHERE 1 = 1
+            <#if stationName?? && stationName != "">
+                AND station.station_name like '%${stationName}%' escape '!'
+            </#if>
+        ]]>
+    </sql-query>
+
+    <sql-query name="queryUserByRole">
+        <![CDATA[
+            SELECT DISTINCT atc.ACCOUNT_ID
+            FROM hy_role role
+            INNER JOIN hy_account_role_mapping atc ON atc.R_CODE = role.R_CODE
+            WHERE 1 = 1
+            <#if roleName?? && roleName != "">
+                AND role.R_NAME like '%${roleName}%' escape '!'
+            </#if>
+        ]]>
+    </sql-query>
+
+    <sql-query name="insertRoleMapping">
+        <![CDATA[
+            INSERT INTO hy_account_role_mapping (ACCOUNT_ID,R_CODE) VALUES (${accountId}, ${rCode})
+        ]]>
+    </sql-query>
+    <sql-query name="insertStationMapping">
+        <![CDATA[
+            INSERT INTO hy_account_station (ACCOUNT_ID,STATION_ID) VALUES (${accountId}, ${stationId})
+        ]]>
+    </sql-query>
+    <sql-query name="insertBusinessMapping">
+        <![CDATA[
+            INSERT INTO hy_account_business (ACCOUNT_ID,BUSINESS_ID) VALUES (${accountId}, ${businessId})
+        ]]>
+    </sql-query>
+
+    <sql-query name="delRoleMapping">
+        <![CDATA[
+            DELETE FROM hy_account_role_mapping WHERE ACCOUNT_ID = ${accountId}
+        ]]>
+    </sql-query>
+    <sql-query name="delStationMapping">
+        <![CDATA[
+            DELETE FROM hy_account_station WHERE ACCOUNT_ID = ${accountId}
+        ]]>
+    </sql-query>
+    <sql-query name="delBusinessMapping">
+        <![CDATA[
+            DELETE FROM hy_account_business WHERE ACCOUNT_ID = ${accountId}
+        ]]>
+    </sql-query>
+
+    <sql-query name="getAttributeRole">
+        <![CDATA[
+            SELECT
+                hr.R_CODE as id,
+                hr.R_NAME as name
+            FROM hy_account_role_mapping har, hy_role hr
+            WHERE har.R_CODE = hr.R_CODE and har.ACCOUNT_ID=${accountId}
+            GROUP BY hr.R_CODE
+        ]]>
+    </sql-query>
+
+    <sql-query name="getAttributeTeam">
+        <![CDATA[
+            SELECT
+                ht.T_ID as id,
+                ht.T_NAME as name
+            FROM hy_atc_mapping ham, hy_team ht
+            WHERE ham.CAR_TEAM_ID = ht.T_ID and ham.ACCOUNT_ID=${accountId}
+            GROUP BY ht.T_ID
+        ]]>
+    </sql-query>
+
+    <sql-query name="getAttributeStation">
+        <![CDATA[
+            SELECT
+                hss.id as id,
+                hss.station_name as name
+            FROM hy_account_station has, hy_service_station hss
+            WHERE has.STATION_ID = hss.id and has.ACCOUNT_ID=${accountId}
+            and hss.DEL_FLAG != 1
+            GROUP BY hss.id
+        ]]>
+    </sql-query>
+
+    <sql-query name="getAttributeBusiness">
+        <![CDATA[
+            SELECT
+                hb.cid as id,
+                hb.business_name as name
+            FROM hy_account_business hab, hy_business hb
+            WHERE hab.BUSINESS_ID = hb.cid and hab.ACCOUNT_ID=${accountId}
+            GROUP BY hb.cid
+        ]]>
+    </sql-query>
+</dynamic-hibernate-statement>

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+<dynamic-hibernate-statement>
+    <!--搜索操作日志-->
+    <sql-query name="searchOperateLogByParam">
+        <![CDATA[
+        SELECT
+             log.LOG_ID id,
+             log.LOG_CONTENT content,
+             log.LOG_VALUE value,
+             log.LOG_TYPE type,
+             log.LOG_DATE time,
+             log.LOG_ACCOUNT_IP ip,
+             log.LOG_ACCOUNT_NAME userName,
+             ha.account_type userType,
+             hb.data_value   userTypeName
+         FROM hy_platform_log log
+         LEFT JOIN hy_account ha ON log.LOG_ACCOUNT_NAME = ha.account_name
+         LEFT JOIN hy_basicdata hb ON ha.account_type =  hb.data_code
+         WHERE hb.data_type="55"
+         <#if accountType?? && accountType != 1>
+               AND log.LOG_ACCOUNT_NAME = '${accountName}'
+         </#if>
+         <#if operateUser?? && operateUser != "" >
+                 AND log.LOG_ACCOUNT_NAME LIKE
+                 CONCAT(CONCAT('%','${operateUser}'), '%') escape '!'
+         </#if>
+         <#if operateUserType?? && operateUserType != "" >
+                 AND ha.account_type = ${operateUserType}
+         </#if>
+         <#if beginTime?? && endTime?? >
+                 AND LOG_DATE BETWEEN ${beginTime} AND ${endTime}
+         </#if>
+          <#if operateType?? && operateType != "">
+             AND log.LOG_TYPE = ${operateType}
+         </#if>
+         <#if operateName?? && operateName != "" >
+                 AND log.LOG_NAME LIKE
+                  CONCAT(CONCAT('%','${operateName}'), '%') escape '!'
+         </#if>
+         <#if operateContent?? && operateContent != "">
+          AND log.LOG_CONTENT LIKE
+                  CONCAT(CONCAT('%','${operateContent}'), '%') escape '!'
+         </#if>
+         ORDER BY log.LOG_DATE DESC
+		]]>
+    </sql-query>
+</dynamic-hibernate-statement>

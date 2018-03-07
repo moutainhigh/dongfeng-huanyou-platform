@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+<dynamic-hibernate-statement>
+    <!--新增终端日志-->
+ <sql-query name="addTerminalLog">
+        <![CDATA[
+      INSERT INTO hy_terminal_log (
+        LOG_NAME,
+        LOG_VALUE,
+        LOG_TYPE,
+        LOG_SIM,
+        LOG_CONTENT,
+        LOG_DATE,
+        LOG_ACCOUNT_IP,
+        LOG_ACCOUNT_NAME,
+        CAR_CPH,
+        COMPANY_NAME,
+        CAR_OWNER,
+        CHASSIS_NUM,
+        LOG_STATE,
+        LOG_LOCK_COMMON
+      )
+      VALUES
+        (
+          '${type}',
+      	  ${value},
+          0,
+          ${simNo},
+          '${des}',
+          ${operateTime},
+          '${operateIp}',
+          '${operateUser}',
+          '${carNum}',
+          '${team}',
+          '${reCustom}',
+          '${chassisNum}',
+          ${status},
+          '${lockCommon}'
+        )
+		]]>
+    </sql-query>
+    <!--更新终端日志-->
+    <sql-query name="updateTerminalLog">
+            <![CDATA[
+          INSERT INTO hy_terminal_log (
+            LOG_NAME,
+            LOG_VALUE,
+            LOG_TYPE,
+            LOG_SIM,
+            LOG_CONTENT,
+            LOG_DATE,
+            LOG_ACCOUNT_IP,
+            LOG_ACCOUNT_NAME,
+            CAR_CPH,
+            COMPANY_NAME,
+            CAR_OWNER,
+            CHASSIS_NUM,
+            LOG_STATE,
+            LOG_LOCK_COMMON
+          )
+          VALUES
+            (
+              '${type}',
+              ${value},
+              0,
+              ${simNo},
+              '${des}',
+              ${operateTime},
+              '${operateIp}',
+              '${operateUser}',
+              '${carNum}',
+              '${team}',
+              '${reCustom}',
+              '${chassisNum}',
+              ${status},
+              '${lockCommon}'
+            )
+    		]]>
+        </sql-query>
+</dynamic-hibernate-statement>

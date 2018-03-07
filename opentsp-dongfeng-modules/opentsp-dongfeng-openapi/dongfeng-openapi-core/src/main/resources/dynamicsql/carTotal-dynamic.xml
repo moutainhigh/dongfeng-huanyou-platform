@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+<dynamic-hibernate-statement>
+    
+    <sql-query name="queryCarTotalThatHaveAAKTimeTotal">
+        <![CDATA[
+            select
+            	count(*) as total
+            from
+            	hy_car car inner join hy_car_detail cd on
+            	car.CAR_ID = cd.CAR_ID
+            where
+            	car.DEL_FLAG = 0
+            	and cd.SALES_STATUS = 0
+            <#if BYW?? && BYW = 'byYear'>
+                and cd.SALES_DATE >= ${minYearDate}
+                and cd.SALES_DATE <= ${maxYearDate}
+             </#if>
+             <#if BYW?? && BYW = 'byMonth'>
+                 and cd.SALES_DATE >= ${minMonthDate}
+                 and cd.SALES_DATE <= ${maxMonthDate}
+             </#if>
+		]]>
+    </sql-query>
+    <sql-query name="queryCarTotalThatHaveAAKTimeTotalForMonth">
+        <![CDATA[
+            select
+            	count(*) as total
+            from
+            	hy_car car inner join hy_car_detail cd on
+            	car.CAR_ID = cd.CAR_ID
+            where
+            	car.DEL_FLAG = 0
+            	and cd.SALES_STATUS = 0
+            <#if BYW?? && BYW = 'byYear'>
+                and cd.SALES_DATE >= ${minYearDate}
+                and cd.SALES_DATE <= ${maxYearDate}
+             </#if>
+             <#if BYW?? && BYW = 'byMonth'>
+                 and cd.SALES_DATE >= ${minMonthDate}
+                 and cd.SALES_DATE <= ${maxMonthDate}
+             </#if>
+		]]>
+    </sql-query>
+    <sql-query name="queryBaseAreaInfo">
+        <![CDATA[
+            SELECT name from base_area where id = ${district}
+		]]>
+    </sql-query>
+    
+    <sql-query name="queryCarTotalByZHType">
+        <![CDATA[
+         SELECT
+        	COUNT(hb.DATA_VALUE) as total
+        FROM
+        	hy_car car
+        	INNER JOIN ( SELECT DATA_ID, DATA_VALUE FROM hy_basicdata WHERE DATA_TYPE = 2 AND locate('载货',DATA_VALUE) > 0) hb ON car.CAR_TYPE = hb.DATA_ID 
+        WHERE 1 = 1  AND car.DEL_FLAG = 0
+        	<#if carIds??>
+                 and car.CAR_ID in(${carIds})
+           </#if>
+		]]>
+    </sql-query>
+    
+    <sql-query name="queryCarTotalByYEType">
+        <![CDATA[
+         SELECT
+        	COUNT(hb.DATA_VALUE) as total
+        FROM
+        	hy_car car
+        	INNER JOIN ( SELECT DATA_ID, DATA_VALUE FROM hy_basicdata WHERE DATA_TYPE = 2 AND locate('越野',DATA_VALUE) > 0) hb ON car.CAR_TYPE = hb.DATA_ID 
+        WHERE 1 = 1  AND car.DEL_FLAG = 0
+        <#if carIds??>
+             and car.CAR_ID in(${carIds})
+        </#if>
+		]]>
+    </sql-query>
+    
+    <sql-query name="queryCarTotalByZXType">
+        <![CDATA[
+         SELECT
+        	COUNT(hb.DATA_VALUE) as total
+        FROM
+        	hy_car car
+        	INNER JOIN ( SELECT DATA_ID, DATA_VALUE FROM hy_basicdata WHERE DATA_TYPE = 2 AND locate('自卸',DATA_VALUE) > 0) hb ON car.CAR_TYPE = hb.DATA_ID 
+        WHERE 1 = 1  AND car.DEL_FLAG = 0
+        	<#if carIds??>
+                 and car.CAR_ID in(${carIds})
+           </#if>
+		]]>
+    </sql-query>
+    
+    <sql-query name="queryCarTotalByQYType">
+        <![CDATA[
+         SELECT
+        	COUNT(hb.DATA_VALUE)  as total
+        FROM
+        	hy_car car
+        	INNER JOIN ( SELECT DATA_ID, DATA_VALUE FROM hy_basicdata WHERE DATA_TYPE = 2 AND locate('牵引',DATA_VALUE) > 0) hb ON car.CAR_TYPE = hb.DATA_ID 
+        WHERE 1 = 1  AND car.DEL_FLAG = 0
+        	<#if carIds??>
+                 and car.CAR_ID in(${carIds})
+           </#if>
+		]]>
+    </sql-query>
+    
+    <sql-query name="queryCarTotalByXSType">
+        <![CDATA[
+         SELECT
+        	COUNT(hb.DATA_VALUE)  as total
+        FROM
+        	hy_car car
+        	INNER JOIN ( SELECT DATA_ID, DATA_VALUE FROM hy_basicdata WHERE DATA_TYPE = 2 AND (locate('厢式',DATA_VALUE) > 0 OR locate('仓栅',DATA_VALUE) > 0 OR locate('油罐',DATA_VALUE) > 0)) hb ON car.CAR_TYPE = hb.DATA_ID 
+        WHERE 1 = 1  AND car.DEL_FLAG = 0
+        	<#if carIds??>
+                 and car.CAR_ID in(${carIds})
+           </#if>
+		]]>
+    </sql-query>
+    
+    <sql-query name="queryCarTotalByBGType">
+        <![CDATA[
+         SELECT
+        	COUNT(hb.DATA_VALUE) as total
+        FROM
+        	hy_car car
+        	INNER JOIN ( SELECT DATA_ID, DATA_VALUE FROM hy_basicdata WHERE DATA_TYPE = 2 AND locate('半挂',DATA_VALUE) > 0) hb ON car.CAR_TYPE = hb.DATA_ID 
+        WHERE 1 = 1  AND car.DEL_FLAG = 0
+        	<#if carIds??>
+                 and car.CAR_ID in(${carIds})
+           </#if>
+		]]>
+    </sql-query>
+</dynamic-hibernate-statement>

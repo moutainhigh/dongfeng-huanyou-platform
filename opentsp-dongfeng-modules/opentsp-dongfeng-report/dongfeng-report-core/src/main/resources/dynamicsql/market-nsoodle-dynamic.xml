@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE  dynamic-hibernate-statement [
+        <!ELEMENT dynamic-hibernate-statement (
+                (hql-query|sql-query)*
+                )>
+        <!-- default: none -->
+
+        <!-- The query element declares a named Hibernate query string -->
+
+        <!ELEMENT hql-query (#PCDATA)>
+        <!ATTLIST hql-query name CDATA #REQUIRED>
+
+        <!-- The sql-query element declares a named SQL query string -->
+
+        <!ELEMENT sql-query (#PCDATA)>
+        <!ATTLIST sql-query name CDATA #REQUIRED>
+        ]>
+
+
+<dynamic-hibernate-statement>
+	<sql-query name="queryNsoodleReport">
+		<![CDATA[
+        select 	
+	        r.ID as id,
+			r.CAR_ID as carId,
+			r.CHASSIS_NUM as chassisNum,
+			r.CAR_CPH as carCph,
+			r.CAR_TYPE as carType,
+			r.car_model_code as carModelCode,
+			r.TEAM_ID as teamId,
+			r.TEAM_DEALER_CODE as teamDealerCode,
+			r.TEAM_NAME as teamName,
+			r.SECD_NAME_LATLON as secdNameLatlon,
+			r.WAREHOUSE_LOG as warehouseLog,
+			r.WAREHOUSE_LAT as warehouseLat,
+			r.WAREHOUSE_TIME as warehouseTime,
+			r.OUT_OF_LIBRARY_LOG as outOfLibraryLog,
+			r.OUT_OF_LIBRARY_LAT as outOfLibraryLat,
+			r.OUT_OF_LIBRARY_TIME as outOfLibraryTime,
+			r.CREATE_TIME as createTime,
+			b.DATA_VALUE as carTypeValue,
+			IFNULL(ter.t_auto_communication_id,ter.t_communication_id) as commId
+		from (
+			select team.t_id,team.DEL_FLAG,CAR_TERMINAL_ID,CAR_TERMINAL from hy_car car,
+			 (
+			   select t_id,DEL_FLAG from hy_team t1
+ 				<#if accountId?? && accountType?? && accountType != 1>
+					,hy_atc_mapping atc
+					 where t1.t_id = atc.car_team_id 
+					 	and atc.ACCOUNT_ID = ${accountId}
+						and atc_type = 0
+ 				</#if>
+			  ) team
+			 where team.del_flag=0 and car.CAR_TEAM_ID = team.T_ID
+			) t 
+			inner join hy_terminal ter ON ter.T_ID = IF (CAR_TERMINAL_ID IS NOT NULL AND CAR_TERMINAL_ID > 0,CAR_TERMINAL_ID,CAR_TERMINAL)
+			inner join hy_not_sold_out_of_dealer_library_exception_report r on r.TEAM_ID = t.t_id 
+			left outer join hy_basicdata b on r.CAR_TYPE = b.DATA_ID 
+		where
+			1 = 1 and b.DATA_TYPE=2
+			<#if teamDealerCode?? && teamDealerCode!="">
+				and r.TEAM_DEALER_CODE like concat( concat( '%', '${teamDealerCode}' ), '%' ) escape '!'
+			</#if>
+			<#if teamName?? && teamName!="">
+				and r.TEAM_NAME like concat( concat( '%', '${teamName}' ), '%' ) escape '!'
+			</#if>
+			<#if startDate?? && endDate??>
+				and r.OUT_OF_LIBRARY_TIME <= ${endDate} and r.OUT_OF_LIBRARY_TIME >= ${startDate} 
+			</#if>
+			order by r.CHASSIS_NUM desc
+			]]>
+	</sql-query>
+</dynamic-hibernate-statement>
